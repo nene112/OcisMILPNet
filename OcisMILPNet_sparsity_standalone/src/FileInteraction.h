@@ -71,7 +71,7 @@ using process_obj_int_T = std::map<string, process_int_T >;
 
 using process_id_T = std::map<int, process_int_T >;
 using process_strT = std::map<string, numeric_t >;
-using h_csv = std::vector<std::vector<string>>;//二维矩阵，啥玩意都给你读成字符串,h_csv[row][column]
+using h_csv = std::vector<std::vector<string>>;//2D matrix; all values are read as strings,h_csv[row][column]
 using h_csv_double = std::vector<std::vector<double>>;
 using h_label = std::vector<string>;
 using json = nlohmann::json;
@@ -101,18 +101,18 @@ struct CalculationParams
 };
 
 // ============================================================
-// 输入文件编码模式
+// Input file encoding mode
 // ============================================================
 enum class TextEncodingMode
 {
-    Auto,       // 自动判断 UTF-8 或 GB18030
-    UTF8,       // 强制按照 UTF-8 读取
-    GB18030     // 强制按照 GBK/GB18030 读取
+    Auto,       // Automatically detect UTF-8 or GB18030
+    UTF8,       // Force UTF-8 decoding
+    GB18030     // Force GBK/GB18030 decoding
 };
 
 
 // ============================================================
-// 判断整个字符串是否为合法 UTF-8
+// Check whether the entire string is valid UTF-8
 // ============================================================
 static bool is_valid_utf8(const std::string& text)
 {
@@ -132,7 +132,7 @@ static bool is_valid_utf8(const std::string& text)
             continue;
         }
 
-        // 两字节 UTF-8
+        // Two-byte UTF-8 sequence
         if (c >= 0xC2 && c <= 0xDF)
         {
             if (i + 1 >= size ||
@@ -145,7 +145,7 @@ static bool is_valid_utf8(const std::string& text)
             continue;
         }
 
-        // 三字节 UTF-8：E0
+        // Three-byte UTF-8 sequence: E0
         if (c == 0xE0)
         {
             if (i + 2 >= size ||
@@ -160,7 +160,7 @@ static bool is_valid_utf8(const std::string& text)
             continue;
         }
 
-        // 三字节 UTF-8：E1-EC、EE-EF
+        // Three-byte UTF-8 sequence: E1-EC, EE-EF
         if ((c >= 0xE1 && c <= 0xEC) ||
             (c >= 0xEE && c <= 0xEF))
         {
@@ -175,7 +175,7 @@ static bool is_valid_utf8(const std::string& text)
             continue;
         }
 
-        // 三字节 UTF-8：ED，排除代理区
+        // Three-byte UTF-8 sequence: ED, excluding the surrogate range
         if (c == 0xED)
         {
             if (i + 2 >= size ||
@@ -190,7 +190,7 @@ static bool is_valid_utf8(const std::string& text)
             continue;
         }
 
-        // 四字节 UTF-8：F0
+        // Four-byte UTF-8 sequence: F0
         if (c == 0xF0)
         {
             if (i + 3 >= size ||
@@ -206,7 +206,7 @@ static bool is_valid_utf8(const std::string& text)
             continue;
         }
 
-        // 四字节 UTF-8：F1-F3
+        // Four-byte UTF-8 sequence: F1-F3
         if (c >= 0xF1 && c <= 0xF3)
         {
             if (i + 3 >= size ||
@@ -221,7 +221,7 @@ static bool is_valid_utf8(const std::string& text)
             continue;
         }
 
-        // 四字节 UTF-8：F4
+        // Four-byte UTF-8 sequence: F4
         if (c == 0xF4)
         {
             if (i + 3 >= size ||
@@ -245,7 +245,7 @@ static bool is_valid_utf8(const std::string& text)
 
 
 // ============================================================
-// GBK/GB18030 转换为 UTF-8
+// Convert GBK/GB18030 to UTF-8
 // ============================================================
 static bool gb18030_to_utf8(
     const std::string& input,
@@ -273,7 +273,7 @@ static bool gb18030_to_utf8(
         return false;
     }
 
-    // Windows 代码页 54936 对应 GB18030
+    // Windows code page 54936 corresponds to GB18030
     constexpr UINT source_code_page = 54936;
 
     const int wide_length =
@@ -371,14 +371,14 @@ static bool gb18030_to_utf8(
 
 #else
 
-    // Linux/macOS 使用 iconv
+    // Use iconv on Linux/macOS
     iconv_t converter =
         iconv_open("UTF-8", "GB18030");
 
     if (converter ==
         reinterpret_cast<iconv_t>(-1))
     {
-        // 部分系统只提供 GBK 名称
+        // Some systems expose only the GBK encoding name
         converter =
             iconv_open("UTF-8", "GBK");
     }
@@ -482,14 +482,14 @@ static bool gb18030_to_utf8(
 
 
 // ============================================================
-// 通用文本文件读取函数
+// Generic text-file reader
 //
-// 功能：
-// 1. 读取任意文本文件；
-// 2. 自动识别 UTF-8 BOM、UTF-8、GBK/GB18030；
-// 3. 最终统一输出 UTF-8；
-// 4. 支持 Windows、Linux、macOS；
-// 5. Windows 支持 UTF-8 中文路径。
+// Features:
+// 1. Read arbitrary text files;
+// 2. Automatically detect UTF-8 BOM, UTF-8, and GBK/GB18030;
+// 3. Normalize output to UTF-8;
+// 4. Support Windows, Linux, and macOS;
+// 5. Support UTF-8 paths containing Chinese characters on Windows.
 // ============================================================
 static bool read_text_file_utf8(
     const std::string& filename,
@@ -512,7 +512,7 @@ static bool read_text_file_utf8(
 
 #ifdef _WIN32
 
-    // filename 约定为 UTF-8 路径
+    // filename is expected to be a UTF-8 path
     const std::filesystem::path file_path =
         std::filesystem::u8path(filename);
 
@@ -576,7 +576,7 @@ static bool read_text_file_utf8(
         return true;
     }
 
-    // 强制按照 UTF-8 读取
+    // Force UTF-8 decoding
     if (mode == TextEncodingMode::UTF8)
     {
         if (!is_valid_utf8(raw_data))
@@ -602,7 +602,7 @@ static bool read_text_file_utf8(
         return true;
     }
 
-    // 强制按照 GB18030 读取
+    // Force GB18030 decoding
     if (mode == TextEncodingMode::GB18030)
     {
         if (!gb18030_to_utf8(
@@ -621,7 +621,7 @@ static bool read_text_file_utf8(
         return true;
     }
 
-    // Auto：完整合法 UTF-8 优先
+    // Auto: prefer a fully valid UTF-8 interpretation
     if (is_valid_utf8(raw_data))
     {
         utf8_text =
@@ -635,7 +635,7 @@ static bool read_text_file_utf8(
         return true;
     }
 
-    // 不是 UTF-8，则尝试 GBK/GB18030
+    // If not UTF-8, try GBK/GB18030
     if (!gb18030_to_utf8(
             raw_data,
             utf8_text,
@@ -676,7 +676,7 @@ std::string U2G(const std::string& utf8);
 void check_elements_is_null(h_csv&,int row,int col);
 /**
  * .
- * @brief  根据分隔符delim，将s中被分隔的字符串逐个保存到elems
+ * @brief  Split s by delimiter delim and append each token to elems
  */
 void split(const std::string& s, char delim, std::vector<std::string>& elems);
 
@@ -684,7 +684,7 @@ void split_s(const std::string& s, char delim, std::vector<std::string>& elems);
 //csv
 /**
  * .
- * @brief 根据分隔符delimiter.读取txt,csv等文件，txt为' '或者'\t'分隔，csv为','分隔
+ * @brief Read txt/csv files using delimiter; txt uses ' ' or '\t', and csv uses ','
  */
 h_csv read_h_csv(string filename, char delimiter);
 h_csv read_h_csv_from_string(const std::string& data, char delimiter);
@@ -746,14 +746,14 @@ void write_tidyData(string path,std::unordered_map<string,string>& data,std::vec
 void write_process_strT(process_strT data, string dirpath, string filename);
 
 double get_average_of_process_int_T(process_int_T& data) ;
-// 重载<<操作符，用于输出vector
+// Overload operator<< for vector output
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
   os << "[";
   for (size_t i = 0; i < vec.size(); ++i) {
     os << vec[i];
     if (i != vec.size() - 1) {
-      os << ", ";  // 在每个元素之间插入逗号和空格
+      os << ", ";  // Insert a comma and space between elements
     }
   }
   os << "]";
@@ -778,7 +778,7 @@ namespace fs = std::filesystem;
 
 std::vector<std::string> getCsvFilesWithoutObs(const std::string& directory_path, const std::string& mask);
 
-// 提取所有整数
+// Extract all integers
 std::vector<int> extract_integers_regex(const std::string& str);
 
 
@@ -790,7 +790,7 @@ void  MutualCoherence(const std::vector<std::vector<double>>& matrix1);
 void printMatrixInfo(const std::vector<std::vector<double>>& matrix);
 void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A);
 
-// 查找当前目录下文件名包含"tar"的文件
+// Find files in the current directory whose names contain "tar"
 std::vector<fs::path> findFilesWithTarInName(const fs::path& directory,string& tar_str);
 
 
@@ -976,7 +976,7 @@ static void utf8_printf(const char* format, ...)
 
     if (isConsole)
     {
-        // UTF-8 转 UTF-16，直接向 Windows 控制台输出
+        // Convert UTF-8 to UTF-16 and write directly to the Windows console
         const int wideLength =
             MultiByteToWideChar(
                 CP_UTF8,
@@ -1018,10 +1018,10 @@ static void utf8_printf(const char* format, ...)
     }
 
     /*
-     * 输出目标不是控制台，例如：
+     * The output target is not a console, for example:
      * program.exe > log.txt
      *
-     * 此时直接输出 UTF-8 字节。
+     * In this case, write UTF-8 bytes directly.
      */
     std::fwrite(
         utf8Text.data(),
@@ -1033,7 +1033,7 @@ static void utf8_printf(const char* format, ...)
 
 #else
 
-    // Linux 和 macOS 通常使用 UTF-8 终端
+    // Linux and macOS terminals typically use UTF-8
     std::fwrite(
         utf8Text.data(),
         1,
@@ -1046,9 +1046,9 @@ static void utf8_printf(const char* format, ...)
 }
 
   /*
- * 对整数执行数学意义上的向下取整除法。
+ * Perform mathematical floor division on integers.
  *
- * C++ 的整数除法向 0 截断，因此负数情况下需要额外处理。
+ * C++ integer division truncates toward zero, so negative operands require special handling.
  */
 static std::int64_t FloorDiv(
     std::int64_t value,
@@ -1072,7 +1072,7 @@ static std::int64_t FloorDiv(
 }
 
 /*
- * 对整数执行数学意义上的向上取整除法。
+ * Perform mathematical ceiling division on integers.
  */
 static std::int64_t CeilDiv(
     std::int64_t value,

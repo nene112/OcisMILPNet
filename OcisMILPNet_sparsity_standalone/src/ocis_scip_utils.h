@@ -2,7 +2,7 @@
 #define INCLUDE_OCIS_SCIP
 #include "scip/scip.h"
 #include "scip/scipdefplugins.h"
-#include "scip/scip_sol.h"       // 包含解相关函数
+#include "scip/scip_sol.h"       // Include solution-related functions
 
 #include "statistics.h"
 #include "FileInteraction.h"
@@ -33,7 +33,7 @@ public:
     string schedule_json_output_path;
     std::map<string, std::vector<string>> summary_dynamic_border;
 
-    double start_time_weight =0.9;//越大越偏向delay
+    double start_time_weight =0.9;//Larger values place more weight on delay
     std::vector<string> bc_Flow;
 
     Ocis_edges edges_utils;
@@ -61,7 +61,7 @@ public:
     string schedule_json_output_path;
     std::map<string, std::vector<string>> summary_dynamic_border;
 
-    double start_time_weight =0.9;//越大越偏向delay
+    double start_time_weight =0.9;//Larger values place more weight on delay
     std::vector<string> bc_Flow;
 
     Ocis_edges edges_utils;
@@ -88,8 +88,8 @@ public:
     string input_path = "./";
     Ocis_edges topo_dicts;
     int mode_leakage_inversion = -1;
-    int workTime_L = 3600 * 0;//一日时间步中的工作日时间
-    int workTime_R = 3600 * 24;//一日时间步中的工作日时间
+    int workTime_L = 3600 * 0;//Working-time bound within a daily time step
+    int workTime_R = 3600 * 24;//Working-time bound within a daily time step
 
     int num_pools;
     int num_pools_decision;
@@ -122,8 +122,8 @@ public:
     string work_time_end;
 
     std::map<string, std::vector<ScheduleScheme>> gates_ScheduleScheme;
-    std::map<string, std::vector<int>> UDCheck;//预期配水时间步骤
-    std::map<int, std::vector<int>> UDCheck_id_map;//预期配水时间步骤
+    std::map<string, std::vector<int>> UDCheck;//Expected water-delivery time steps
+    std::map<int, std::vector<int>> UDCheck_id_map;//Expected water-delivery time steps
 
     double hr_dt = 3600;
     double daily_dt = 86400;
@@ -167,14 +167,14 @@ public:
 
     string optimal_obj = "optimal";
 
-    double x_weight = 1.1;       //最小化x(Q)的权重
-    double QGap_weight = 1.1;       //最小化Q与目标值的偏差
-    double dQ_weight = 1.;       //最小化Q与目标值的偏差
+    double x_weight = 1.1;       //Weight for minimizing x(Q)
+    double QGap_weight = 1.1;       //Weight for minimizing deviation between Q and the target
+    double dQ_weight = 1.;       //Weight for minimizing deviation between Q and the target
     double flow_weight = -1;
     double stage_weight = -1;
-    double fabs_dx_weight = 10;  // 流量变幅 权重
-    double fabs_dy_weight = 10;  // 水位变幅 权重
-    double fabs_boundary_dx_weight = 100;//流量边界条件权重
+    double fabs_dx_weight = 10;  // Weight for flow variation
+    double fabs_dy_weight = 10;  // Weight for water-level variation
+    double fabs_boundary_dx_weight = 100;//Weight for flow boundary conditions
     double fabs_boundary_dy_weight = 100;
     double z_weight = 100;
 
@@ -324,9 +324,9 @@ public:
   void MILP_write_output(MILP_param& input_param,MILP_result& result,string dirpath);
   void MILP_write_action(MILP_param& input_param,MILP_result& result,string dirpath);
   
-  nlohmann::ordered_json MILP_write_schedule_MultiDays(MILP_param& input_param,MILP_result& result,string dirpath);         //只写schedule_MultiDays.json,被MILP_write_output_MultiDays()调用
-  void MILP_write_output_MultiDays(MILP_param& input_param,MILP_result& result,string dirpath);                             // schedule_MultiDays.json 和 action.csv都写
-  void MILP_write_RMGateSchedule(MILP_param& input_param,MILP_result& result,string dirpath,string filename);               //兼容老版本 RMGateSchedule.json   
+  nlohmann::ordered_json MILP_write_schedule_MultiDays(MILP_param& input_param,MILP_result& result,string dirpath);         //Write only schedule_MultiDays.json; called by MILP_write_output_MultiDays()
+  void MILP_write_output_MultiDays(MILP_param& input_param,MILP_result& result,string dirpath);                             // Write both schedule_MultiDays.json and action.csv
+  void MILP_write_RMGateSchedule(MILP_param& input_param,MILP_result& result,string dirpath,string filename);               //Maintain compatibility with the legacy RMGateSchedule.json format
   void MILP_write_csv(MILP_param& input_param,MILP_result& result,string dirpath,string var_name);
   void MILP_write_csv_pools(MILP_param& input_param,MILP_result& result,string dirpath,string var_name);
   void MILP_write_csv_pools(MILP_param& input_param,MILP_result& result,string dirpath,string var_name,string suffix);
@@ -987,22 +987,22 @@ public:
   public:
     using Formatter = std::function<void(std::ostream&, SCIP*, int, SCIP_VAR**)>;
 
-    // 注册要显示的字段
+    // Register fields to display
     void addField(const std::string& name, Formatter formatter, SCIP_VAR** var_array = nullptr) {
       fields_[name] = { formatter, var_array };
     }
 
-    // 打印解决方案
+    // Print the solution
     void print(SCIP* scip, const std::vector<std::string>& field_order, int num_gates = 10) {
-      // 1. 收集所有数据
+      // 1. Collect all data
       std::vector<std::map<std::string, std::string>> rows;
 
-      // 2. 准备数据
+      // 2. Prepare the data
       for (int i = 0; i < num_gates; ++i) {
         std::map<std::string, std::string> row;
-        for (const auto& field_entry : fields_) {  // 使用 entry 代替结构化绑定
-          const std::string& name = field_entry.first;  // 获取键
-          const auto& field = field_entry.second;       // 获取值
+        for (const auto& field_entry : fields_) {  // Use entry instead of structured binding
+          const std::string& name = field_entry.first;  // Get the key
+          const auto& field = field_entry.second;       // Get the value
 
           std::ostringstream oss;
           field.formatter(oss, scip, i, field.var_array);
@@ -1011,31 +1011,31 @@ public:
         rows.push_back(row);
       }
 
-      // 3. 计算列宽
+      // 3. Compute column widths
       std::map<std::string, size_t> col_widths;
       for (const auto& name : field_order) {
         size_t max_len = name.length();
         for (const auto& row : rows) {
           max_len = (std::max)(max_len, row.at(name).length());
         }
-        col_widths[name] = max_len + 1; // 加1作为边距
+        col_widths[name] = max_len + 1; // Add 1 for padding
       }
 
-      // 4. 打印表头
+      // 4. Print the header
       std::cout << "|";
       for (const auto& name : field_order) {
         std::cout << " " << std::setw(col_widths[name]) << std::left << name << " |";
       }
       std::cout << "\n";
 
-      // 打印分隔线
+      // Print the separator line
       std::cout << "+";
       for (const auto& name : field_order) {
         std::cout << std::string(col_widths[name] + 2, '-') << "+";
       }
       std::cout << "\n";
 
-      // 5. 打印数据行
+      // 5. Print data rows
       for (const auto& row : rows) {
         std::cout << "|";
         for (const auto& name : field_order) {
@@ -1044,7 +1044,7 @@ public:
         std::cout << "\n";
       }
     }
-    // 新增：输出CSV格式
+    // Added: CSV output
     void printCSV(SCIP* scip,
       const std::vector<std::string>& field_order,
       const std::string& filename = "",
@@ -1055,7 +1055,7 @@ public:
   private:
     struct FieldInfo {
       Formatter formatter;
-      SCIP_VAR** var_array; // 变量数组指针
+      SCIP_VAR** var_array; // Pointer to the variable array
     };
 
     std::map<std::string, FieldInfo> fields_;
@@ -1065,8 +1065,8 @@ public:
       data_.clear();
       for (int i = 0; i < num_gates; ++i) {
         std::map<std::string, std::string> row;
-        for (const auto& field_pair : fields_) {  // 使用 pair 替代结构化绑定
-          const std::string& name = field_pair.first;  // 手动解构 pair
+        for (const auto& field_pair : fields_) {  // Use pair instead of structured binding
+          const std::string& name = field_pair.first;  // Manually unpack the pair
           const auto& field = field_pair.second;
 
           std::ostringstream oss;

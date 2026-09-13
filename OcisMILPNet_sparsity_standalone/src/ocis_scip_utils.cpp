@@ -3210,7 +3210,7 @@ void ResultJsonToAction(
       }
     }
 
-    //鼓励节制闸增大
+    //Encourage larger regulating-gate flow
     input_param.actions_weights.resize(input_param.topo_dicts.gates.size());
     input_param.actionsGap_weights.resize(input_param.topo_dicts.gates.size());
     input_param.WGap_weights.resize(input_param.topo_dicts.gates.size());
@@ -3247,10 +3247,10 @@ void ResultJsonToAction(
     }
 
 
-        // 方法1.1：使用默认随机引擎和分布
-    std::random_device rd;  // 真随机数种子
-    std::mt19937 gen(rd()); // Mersenne Twister 19937 引擎
-    std::uniform_real_distribution<> dis(0.0, 1.0); // [0.0, 1.0) 均匀分布
+        // Method 1.1: use the default random engine and distribution
+    std::random_device rd;  // Nondeterministic random seed
+    std::mt19937 gen(rd()); // Mersenne Twister 19937 engine
+    std::uniform_real_distribution<> dis(0.0, 1.0); // Uniform distribution on [0.0, 1.0)
     
     std::vector<double> y_min; y_min.resize(input_param.topo_dicts.pools.size());
     std::vector<double> y_max; y_max.resize(input_param.topo_dicts.pools.size());
@@ -3364,8 +3364,8 @@ void ResultJsonToAction(
       auto dy = model.addVariables2D(input_param.num_pools, input_param.time_vars, "dy", -1000, 1000, 0.00, SCIPModel::VarType::CONTINUOUS);
       auto yGap = model.addVariables2D(input_param.num_pools, input_param.time_vars, "yGap", 0, 1000, 1, SCIPModel::VarType::CONTINUOUS);
 
-      // ========== 1. 变量定义 ==========
-      // 1D连续变量 (3个) ∈ [0,10],小流量要用大权重
+      // ========== 1. Variable definitions ==========
+      // 1D continuous variables (3) in [0,10]; use larger weights for small flows
       auto Q = model.addVariables2D(input_param.num_vars, input_param.time_vars, "Q", input_param.gates_min_flow, input_param.gates_max_flow, input_param.actions_weights, SCIPModel::VarType::CONTINUOUS);
       auto fabs_dQ = model.addVariables2D(input_param.num_vars, input_param.time_vars, "fabs_dQ", 0, input_param.gates_max_flow, 1, SCIPModel::VarType::CONTINUOUS);
       auto dQ = model.addVariables2D(input_param.num_vars, input_param.time_vars, "dQ", -1000, 1000, 0, SCIPModel::VarType::CONTINUOUS);
@@ -3373,7 +3373,7 @@ void ResultJsonToAction(
       auto W = model.addVariables1D(input_param.num_vars, "W", 0, SCIPinfinity(model.getSCIP()), 0, SCIPModel::VarType::CONTINUOUS);
       auto WGap = model.addVariables1D(input_param.num_vars, "WGap", 0, SCIPinfinity(model.getSCIP()),input_param.WGap_weights, SCIPModel::VarType::CONTINUOUS);
 
-      // 2D连续变量 (2x3) ∈ [0,5]
+      // 2D continuous variables (2x3) in [0,5]
 
       add_sum_t_cons(model, input_param.dt, Q, W, input_param.num_vars, input_param.time_vars, "W_sum");
       for (int i = 0; i < input_param.num_vars; ++i) {
@@ -3407,7 +3407,7 @@ void ResultJsonToAction(
           //add_min_Gap_cons(model, W(i), WGap(i), input_param, i, 0, g->W_input, "WGap_cons");
         }
 
-        //初始条件
+        //Initial conditions
         int j = 0;
         if (g->obs_flow >= 0) {
             add_min_Gap_cons(model, Q(i, j), QGap(i, j), input_param, i, j, g->obs_flow, "initialQ_cons");
@@ -3426,15 +3426,15 @@ void ResultJsonToAction(
 
         }
 
-        //末态目标
+        //Terminal-state target
         j = input_param.time_vars-1;
         if (g->end_flow >= 0) {
-            //add_Equal_cons(model, 1, Q(g->id, j), g->end_flow, 0.2 * g->end_flow, g->id, j, "endflow_cons");//强制给定渠段上下游节制闸流量可能会导致渗漏流量违反约束
+            //add_Equal_cons(model, 1, Q(g->id, j), g->end_flow, 0.2 * g->end_flow, g->id, j, "endflow_cons");//Forcing upstream and downstream regulating-gate flows may cause leakage-flow constraint violations
         }
 
       }
 
-      // ========== 2. 约束添加 ==========
+      // ========== 2. Add constraints ==========
       for (int j = 0; j < input_param.time_vars; ++j) {
         for (int i = 0; i < input_param.num_vars; ++i) {
           Ocis_edges::Point* g = &input_param.topo_dicts.gates[i];
@@ -3492,12 +3492,12 @@ void ResultJsonToAction(
             //add_min_Gap_cons(model, Q(i, j), QGap(i, j), input_param, i, j, 0, "QGap_designflow_cons");
           }
 
-          //渗漏
+          //Leakage
           if (g->type == 6) {
               //add_Equal_cons(model, 1, Q(g->id, j), 1, infiltrationQ(p->id, j), 0.0 * g->maxFlow, g->id, j, "gate_infiltrationQ_cons");
           }
 
-          //2.1.3 每两个时间步之间的流量变幅最小
+          //2.1.3 Minimize flow variation between consecutive time steps
           if (j > 0) {
             add_delta_variable_cons(model, Q(i, j - 1), Q(i, j), dQ(i, j), i, j, "dQ_cons");
             //add_greaterOrEqual_cons(model, 0.2, Q(i, j - 1), fabs_dQ(i, j), i, j, "fabsdQ>20_cons");
@@ -3507,20 +3507,20 @@ void ResultJsonToAction(
             add_lessOrEqual_cons(model,g->delta_Q_max, fabs_dQ(i, j), i, j, "fabsdQ>20_cons");
           }
 
-          //2.1.4 流量变幅的绝对值约束
+          //2.1.4 Absolute-value constraint on flow variation
           add_fabs_cons(model, dQ(i, j), fabs_dQ(i, j), i, j, "fabs_dQ_cons");
 
 
         }
       }
 
-      // ********** **********初始条件 ********************// 
+      // ********** **********Initial conditions ********************//
       add_FlowBalance_internalModel_cons(model, input_param, Q, y, true, "FlowBalance_internal_model_");
       //add_BiggerFlow_dynamic_internalModel_cons(model, input_param, x, "FlowBalance_dynamic_model_");
 
       for (int i = 0; i < input_param.num_pools; ++i) {
-        string g_name = input_param.topo_dicts.pools[i].source[0].name;  /** 只取pool上游节制闸计算流量和流速*/
-        string g_end_name = input_param.topo_dicts.pools[i].targets[0].name;  /** 只取pool上游节制闸计算流量和流速*/
+        string g_name = input_param.topo_dicts.pools[i].source[0].name;  /** Use only the upstream regulating gate of the pool to compute flow and velocity*/
+        string g_end_name = input_param.topo_dicts.pools[i].targets[0].name;  /** Use only the upstream regulating gate of the pool to compute flow and velocity*/
         Ocis_edges::Point* g_source = input_param.topo_dicts.get_gate_byName(g_name);
         Ocis_edges::Point* g_end = input_param.topo_dicts.get_gate_byName(g_end_name);
         int g_source_id = g_source->id;
@@ -3535,7 +3535,7 @@ void ResultJsonToAction(
           double Uy = GateScheduleLinearInterpolate(input_param.boundary_stage[g_end_name], k_t);
           if (Uy > 0) {
             add_min_Gap_cons(model, y(i, j), yGap(i, j), input_param, i, j, Uy, "yGap_designflow_cons");
-            //add_Equal_cons(model, 1, y(i, j), Uy, i, j, "y_hard_cons");                                       //强制给定渠段上下游节制闸流量可能会导致渗漏流量违反约束
+            //add_Equal_cons(model, 1, y(i, j), Uy, i, j, "y_hard_cons");                                       //Forcing upstream and downstream regulating-gate flows may cause leakage-flow constraint violations
           }
           else
           {
@@ -3543,11 +3543,11 @@ void ResultJsonToAction(
           }
 
 
-          //2.1.3 每两个时间步之间的流量变幅最小
+          //2.1.3 Minimize flow variation between consecutive time steps
           if (j > 0) {
             add_delta_variable_cons(model, y(i, j - 1), y(i, j), dy(i, j), i, j, "dy_cons");
           }
-          //2.1.4 流量变幅的绝对值约束
+          //2.1.4 Absolute-value constraint on flow variation
           add_fabs_cons(model, dy(i, j), fabs_dy(i, j), i, j, "fabs_dy_cons");
           //  add_Equal_cons(model, (1 - p->utilization_ratio), Q(g_source_id, j), 1, infiltrationQ(p->id, j), 0.0, p->id, j, "pool_infiltrationQ_cons");
         }
@@ -3559,7 +3559,7 @@ void ResultJsonToAction(
       SCIP_RETCODE retcode;
       retcode = model.solve();
 
-      // 用于迭代求解
+      // Used for iterative solving
       //model.resetModel(model.getSCIP());
       //add_Equal_cons(model, 0, Q(0, 0), 1, W(0, 0), 0., 0, 0, "gate_W_resolveTest_cons");
       //retcode = model.solve();
@@ -3570,7 +3570,7 @@ void ResultJsonToAction(
       SCIP_STATUS status = SCIPgetStatus(model.getSCIP());
         string model_lp_path = input_param.outputpath + "/model.lp";
         SCIPwriteOrigProblem(model.getSCIP(), model_lp_path.c_str(), nullptr, FALSE);
-      // ========== 3. 求解与输出 ==========
+      // ========== 3. Solve and output ==========
         if (status != SCIP_STATUS_OPTIMAL) {
           std::cout << "[Solve Label] Can't find optimal solution" << std::endl;
 
@@ -3578,19 +3578,19 @@ void ResultJsonToAction(
           if (input_param.W_based_optimalAllocation == 1 && result.find_optimal_solution_label != 1) {
 
             SCIP* scip = model.getSCIP();
-            //开始迭代
+            //Start iteration
             SCIP_Real global_ub;
             for (int i = 0; i < input_param.num_vars; i++) {
               Ocis_edges::Point* g = &input_param.topo_dicts.gates[i];
               //std::cout << "*****************************************" << g->name << ": " << i << " *************************************" << endl;
               model.resetModel(scip);
               for (int j = 0; j < input_param.time_vars; j++) {
-                // 修改可行域
-     //           SCIPchgVarLb(scip, Q(i,j), 0);  // 新下界 2.0
-                // 获取上界
+                // Modify the feasible region
+     //           SCIPchgVarLb(scip, Q(i,j), 0);  // New lower bound: 2.0
+                // Get the upper bound
                 SCIP_Real global_ub = SCIPvarGetUbGlobal(Q(i, j));
 
-                SCIPchgVarUb(scip, Q(i, j), 999);   // 新上界 8.0
+                SCIPchgVarUb(scip, Q(i, j), 999);   // New upper bound: 8.0
               }
               model.resetModel(scip);
               retcode = model.solve();
@@ -3609,7 +3609,7 @@ void ResultJsonToAction(
       }
       else if (status == SCIP_STATUS_OPTIMAL) {
 
-        // 即使状态是OPTIMAL，也要检查解是否存在
+        // Even when the status is OPTIMAL, verify that a solution exists
         SCIP_SOL* sol = SCIPgetBestSol(model.getSCIP());
         if (sol == NULL) {
           std::cout << "Warning: Optimal status but no solution available" << std::endl;
@@ -3623,11 +3623,11 @@ void ResultJsonToAction(
         SCIP* scip = model.getSCIP();
 
 
-        //优先级队列(pool)
-        std::map<int, double> pool_Wdemand;//渠段权重，渠段编号
-        std::map<int, double> pool_Qmax;//渠段权重，渠段编号
-        std::map<double, int> pool_queue;//渠段权重，渠段编号
-        std::map<int, std::map<double, int>> pool_offtakes_queue;//渠段编号，<闸门权重，闸门编号>
+        //Priority queue (pool)
+        std::map<int, double> pool_Wdemand;//Reach weight, reach ID
+        std::map<int, double> pool_Qmax;//Reach weight, reach ID
+        std::map<double, int> pool_queue;//Reach weight, reach ID
+        std::map<int, std::map<double, int>> pool_offtakes_queue;//Reach ID, <gate weight, gate ID>
 
 
         for (int i = 0; i < input_param.num_pools; ++i) {
@@ -3636,10 +3636,10 @@ void ResultJsonToAction(
             string name = input_param.topo_dicts.pools[i].turnouts[g].name;
             Ocis_edges::Point* g_tp = input_param.topo_dicts.get_gate_byName(name);
             if (g_tp->edge_stage > p->pool_Length || g_tp->edge_stage < 0) {
-              // 闸门 渠段内桩号异常，随机赋值 
-              //方法1.1：使用默认随机引擎和分布
-              std::random_device rd1;  // 真随机数种子
-              std::mt19937 gen1(rd1()); // Mersenne Twister 19937 引擎
+              // Gate stationing within the reach is invalid; assign a random value
+              //Method 1.1: use the default random engine and distribution
+              std::random_device rd1;  // Nondeterministic random seed
+              std::mt19937 gen1(rd1()); // Mersenne Twister 19937 engine
               std::uniform_real_distribution<> dis1(0.2 * p->pool_Length, 0.9 * p->pool_Length);
               g_tp->edge_stage = dis1(gen1);
             }
@@ -3658,31 +3658,31 @@ void ResultJsonToAction(
         }
 
         if (input_param.W_based_optimalAllocation == 1) {
-          // 开始迭代重加权 (IRL1) 与 变量剪枝 (Fix-and-Optimize)
+          // Start iterative reweighting (IRL1) and variable pruning (Fix-and-Optimize)
           
-          // IRL1 的核心参数
-          double epsilon_irl1 = 1e-3; // 防止分母为0的平滑参数
-          double C_scale = 10;       // 基础惩罚系数，可根据实际目标函数量级调整
-          double max_weight = 10000.0;// 防止 SCIP 数值爆炸的权重上限
-          double zero_tolerance = 1e-3; // 认定为"零"的硬阈值
-          double epsilon_tv = 1e-4; // 防止 dQ 分母为0
-          double C_tv = 1.0;        // dQ 的基础惩罚系数
-          double max_tv_weight = 10e6; // dQ 的最大惩罚上限
+          // Core IRL1 parameters
+          double epsilon_irl1 = 1e-3; // Smoothing parameter to avoid a zero denominator
+          double C_scale = 10;       // Base penalty coefficient; adjust to the objective-function scale
+          double max_weight = 10000.0;// Weight cap to prevent SCIP numerical instability
+          double zero_tolerance = 1e-3; // Hard threshold for treating a value as zero
+          double epsilon_tv = 1e-4; // Prevent a zero denominator in dQ weighting
+          double C_tv = 1.0;        // Base penalty coefficient for dQ
+          double max_tv_weight = 10e6; // Maximum dQ penalty
           // Penalize late allocation flow. Since W is fixed, this advances
           // the same task volume instead of shrinking it.
           const double early_delivery_weight = 1.0e6;
 
 
 
-          // 在外层（或者类成员变量中），记录当前允许的最晚配水时间
-// 初始值为最大的时间步
+          // At the outer level (or as a class member), track the latest currently allowed delivery time
+// Initialize to the maximum time step
           int allowed_max_j = input_param.time_vars - 1;
-          // 无解时，下一次重算暂时不执行本轮硬固定
+          // If infeasible, temporarily skip this round of hard fixing on the retry
           bool skip_hard_fix_once = false;
 
-          // 同一轮最多自动回退一次，防止无限循环
+          // Allow at most one automatic rollback per iteration to prevent an infinite loop
           int infeasible_retry_count = 0;
-                    //开始迭代
+                    //Start iteration
           // A fixed five rounds only removes four tail periods, so on a
           // 30-period horizon it still leaves an almost uniform 26-period
           // schedule.  Continue until the active horizon reaches its smallest
@@ -3693,8 +3693,8 @@ void ResultJsonToAction(
             model.resetModelPreserveSolution(scip);
 
             // ============================================================
-            // 新增：保存本轮修改前的 Q 上限
-            // 本轮无解时，用于撤销本轮新增的 Q=0 硬固定
+            // Added: save Q upper bounds before this iteration modifies them
+            // Used to undo new Q=0 hard fixes if this iteration is infeasible
             // ============================================================
             std::vector<std::vector<SCIP_Real>> Q_ub_backup(
               input_param.num_vars,
@@ -3748,7 +3748,7 @@ void ResultJsonToAction(
 
             double epsilon = 1e-3 / (1.0 + pow(10, -iter));
 
-            //计算 到达时间
+            //Compute arrival time
             for (auto iter = input_param.topo_dicts.vec_graph_id.begin(); iter != input_param.topo_dicts.vec_graph_id.end(); iter++) {
               int i = iter->second;
               string name_s = input_param.topo_dicts.pools[i].source[0].name;
@@ -3786,18 +3786,18 @@ void ResultJsonToAction(
 
               }
             }
-            std::map<int, int> sparsity_k;//当前最优解，每个闸门的稀疏度
+            std::map<int, int> sparsity_k;//Current best solution: sparsity of each gate
             double max_sparsity = 0;
             for (int i = 0; i < input_param.num_vars; i++) {
               int opt_sparsity_k = 0;
               Ocis_edges::Point* g = &input_param.topo_dicts.gates[i];
               if (is_delivery_demand_gate(*g)) {
-                //计算理想稀疏度
+                //Compute ideal sparsity
                 double L0_num = 0;
                 if (g->W_input > 0 && g->fixed_W == 1) {
                   L0_num = g->W_input / (g->maxFlow * input_param.dt);
                 }
-                //计算稀疏度
+                //Compute sparsity
                 for (int j = 0; j < input_param.time_vars; ++j) {
                   double value = model.getSolution(Q(i, j));
                   double abs_value = fabs(value);
@@ -3818,7 +3818,7 @@ void ResultJsonToAction(
                 for (int j = 0; j < input_param.time_vars; ++j) {
                   Ocis_edges::Point* g = &input_param.topo_dicts.gates[i];
                   double opt_L0_num = 0;
-                  //选择重要的调整加权,稀疏度低的加权
+                  //Apply reweighting to important adjustments, emphasizing low-sparsity cases
                   double value = model.getSolution(Q(i, j));
                   double abs_value = fabs(value);
                   // Timeline compression can take many rounds.  Cap the
@@ -3828,54 +3828,54 @@ void ResultJsonToAction(
                   //double r_weight = ((1.0 / input_param.topo_dicts.gates[i].maxFlow) * 1.0) / (value + epsilon);
                 
                   // =========================================================
-                  // 绝杀手段：如果当前时间步超出了允许的最晚时间线，直接焊死为 0
+                  // Hard cutoff: if the current time step exceeds the latest allowed horizon, fix it directly to 0
                   // =========================================================
                   if (!skip_hard_fix_once &&
                     iter >= 0 &&
                     j > allowed_max_j) {
-                    SCIPchgVarUb(scip, Q(i, j), 0.0);  // 物理上禁止此阶段有水
-                    SCIPchgVarObj(scip, Q(i, j), 0.0); // 目标系数清零
-                    continue; // 直接跳过后续所有的重加权
+                    SCIPchgVarUb(scip, Q(i, j), 0.0);  // Physically disallow flow in this period
+                    SCIPchgVarObj(scip, Q(i, j), 0.0); // Set the objective coefficient to zero
+                    continue; // Skip all subsequent reweighting for this variable
                   }
 
                   // ==========================================================
-                  // 核心改进 1：启发式剪枝 (Hard Thresholding / Variable Fixing)
-                  // 如果迭代超过 1 次，且该时段流量已经被压得很小，直接固定为 0
+                  // Core improvement 1: heuristic pruning (Hard Thresholding / Variable Fixing)
+                  // After more than one iteration, fix flow to 0 if it has already become very small in this period
                   // ==========================================================
                   if (!skip_hard_fix_once &&
                     iter >= 1 &&
                     abs_value <= zero_tolerance) {
-                    // 将变量的上限强行改为 0，直接从搜索树中剔除该变量的维度
+                    // Force the variable upper bound to 0 to remove this dimension from the search tree
                     //SCIPchgVarUb(scip, Q(i, j), 0.0);
-                    SCIPchgVarUb(scip, Q(i, j), 0.0); // 真正从搜索空间剔除
-                    SCIPchgVarObj(scip, Q(i, j), 0.0); // 剔除后目标系数设为0防止干扰
-                    continue; // 已经被焊死了，不需要再修改目标函数系数
+                    SCIPchgVarUb(scip, Q(i, j), 0.0); // Remove it from the search space
+                    SCIPchgVarObj(scip, Q(i, j), 0.0); // Set the objective coefficient to 0 after pruning to avoid interference
+                    continue; // The variable is fixed, so its objective coefficient no longer needs updating
                   }
                   // ==========================================================
-                  // 核心改进 2：真正的 IRL1 权重更新公式
-                  // 流量越小，惩罚越大，逼迫其归零；流量越大，惩罚越小，允许保持
+                  // Core improvement 2: actual IRL1 weight-update formula
+                  // Smaller flows receive larger penalties to drive them to zero; larger flows receive smaller penalties so they can remain active
                   // ==========================================================
                   r_weight = C_scale / (abs_value + epsilon_irl1);
 
-                  // 防爆机制：限制最大惩罚权重
+                  // Numerical safeguard: cap the maximum penalty weight
                   if (r_weight > max_weight) {
                     r_weight = max_weight;
                   }
 
                   // ==========================================
-                  // 2. 【核心修正】：计算 dQ 的专属重加权 (IR-TV)
+                  // 2. Core correction: compute dedicated reweighting for dQ (IR-TV)
                   // ==========================================
-                  double tv_weight = C_tv; // 第一轮(iter==0)使用静态 TV 惩罚
+                  double tv_weight = C_tv; // Use a static TV penalty in the first iteration (iter==0)
 
                   if (iter >= 1&&(g->type == 2||g->type==-1) && demand_state[j][i] == 1) {
-                    // 获取上一轮的 dQ 值 (如果是第0个时间步，假设没有前序波动，dQ=0)
+                    // Get dQ from the previous iteration (for time step 0, assume no preceding variation and set dQ=0)
                     double prev_Q = (j > 0) ? model.getSolution(Q(i, j - 1)) : 0.0;
                     double abs_dQ = fabs(value- prev_Q);
 
-                    // 也可以直接获取您定义的 fabs_dQ 变量的解：
+                    // Alternatively, read the solution of the defined fabs_dQ variable directly:
                     // double abs_dQ = fabs(model.getSolution(fabs_dQ(i, j)));
 
-                    // dQ 专属的重加权公式：波动越小，惩罚越大（逼迫完全平滑）
+                    // Dedicated dQ reweighting: smaller variation receives a larger penalty to enforce smoothness
                     tv_weight = C_tv / (abs_dQ + epsilon_tv);
                     if (tv_weight > max_tv_weight) {
                       tv_weight = max_tv_weight;
@@ -3883,24 +3883,24 @@ void ResultJsonToAction(
                   }
 
                   // ==========================================================
-                  // 核心改进 3：基于业务场景的惩罚/奖励逻辑分配
+                  // Core improvement 3: assign penalty/reward logic based on operational requirements
                   // ==========================================================
-                  //稀疏度范围内，权重取负，鼓励使用
+                  //Within the sparsity range, use a negative weight to encourage activation
                   if (is_delivery_demand_gate(*g)) {
                     double Q_sol = model.getSolution(Q(i, j));
-                    // 1. 获取上一轮的 Gap 解
+                    // 1. Get the Gap solution from the previous iteration
                     double gap_sol = model.getSolution(QGap(i, j));
-                   // 2. 针对 Gap 的专属 IRL1 权重
+                   // 2. Dedicated IRL1 weight for Gap
                     double qgap_weight = C_scale / (gap_sol + epsilon_irl1);
                     if (qgap_weight > max_weight) qgap_weight = max_weight;
                     //double diff_ratio = fabs(Q_sol - demand_flow[j][i]) / demand_flow[j][i];
 
-                    // 仅对 QGap 施加适当的惩罚，引导流量逼近需求值
+                    // Apply an appropriate penalty only to QGap to steer flow toward the demand value
                     SCIPchgVarObj(scip, QGap(i, j), qgap_weight*(1/g->maxFlow));
-                    //SCIPchgVarObj(scip, fabs_dQ(i, j),10e8*r_weight * diff_ratio*(1/g->maxFlow));//用全变差正则化（Total Variation, TV）代替开关约束
+                    //SCIPchgVarObj(scip, fabs_dQ(i, j),10e8*r_weight * diff_ratio*(1/g->maxFlow));//Use Total Variation (TV) regularization instead of switching constraints
 
-                    // 【关键】：对 fabs_dQ 使用独立的 tv_weight，不要乘上 diff_ratio 和 r_weight！
-                   // 乘以一个常数基数（比如 1000），确保平滑惩罚有足够的震慑力
+                    // Key: use an independent tv_weight for fabs_dQ; do not multiply by diff_ratio or r_weight.
+                   // Multiply by a constant base (e.g., 1000) so the smoothing penalty is sufficiently strong
                     if (j < allowed_max_j) {
                       // Keep smoothing secondary to early completion; the
                       // old amplified TV cost favored month-long flat flow.
@@ -3917,7 +3917,7 @@ void ResultJsonToAction(
                         scip, Q(i, j),
                         early_delivery_weight * lateness / flow_scale);
 
-                    //2025 手动设计的重加权策略
+                    //Manually designed 2025 reweighting strategy
                     //SCIPchgVarObj(scip, QGap(i, j), r_weight*diff);
                     //SCIPchgVarObj(scip, fabs_dQ(i, j), r_weight*diff);
                     //SCIPchgVarObj(scip, Q(i, j), -r_weight);
@@ -3943,8 +3943,8 @@ void ResultJsonToAction(
             }
 
             for (int i = 0; i < input_param.num_pools; ++i) {
-              string g_name = input_param.topo_dicts.pools[i].source[0].name;  /** 只取pool上游节制闸计算流量和流速*/
-              string g_end_name = input_param.topo_dicts.pools[i].targets[0].name;  /** 只取pool上游节制闸计算流量和流速*/
+              string g_name = input_param.topo_dicts.pools[i].source[0].name;  /** Use only the upstream regulating gate of the pool to compute flow and velocity*/
+              string g_end_name = input_param.topo_dicts.pools[i].targets[0].name;  /** Use only the upstream regulating gate of the pool to compute flow and velocity*/
               Ocis_edges::Point* g_source = input_param.topo_dicts.get_gate_byName(g_name);
               Ocis_edges::Point* g_end = input_param.topo_dicts.get_gate_byName(g_end_name);
               int g_source_id = g_source->id;
@@ -3982,7 +3982,7 @@ void ResultJsonToAction(
 
 
             // ============================================================
-            // 求解
+            // Solve
             // ============================================================
             retcode = model.solve();
 
@@ -3992,8 +3992,8 @@ void ResultJsonToAction(
               status = SCIPgetStatus(model.getSCIP());
             }
 
-            // SCIP_OKAY 只表示求解接口正常返回，
-            // 还必须确认当前确实存在可用解。
+            // SCIP_OKAY only indicates that the solve interface returned normally;
+            // you must also verify that a usable solution actually exists.
             bool has_solution =
               retcode == SCIP_OKAY &&
               SCIPgetBestSol(model.getSCIP()) != nullptr &&
@@ -4002,11 +4002,11 @@ void ResultJsonToAction(
               status != SCIP_STATUS_UNBOUNDED;
 
             // ============================================================
-            // 无解处理：
-            // 1. 恢复本轮开始前的全部 Q 上限；
-            // 2. 当前 iter 自动重算一次；
-            // 3. 重算时暂时跳过两种硬固定；
-            // 4. 其余优化逻辑完全不变。
+            // Infeasibility handling:
+            // 1. Restore all Q upper bounds from the start of this iteration;
+            // 2. Retry the current iter once automatically;
+            // 3. Temporarily skip both hard-fixing rules during the retry;
+            // 4. Leave all other optimization logic unchanged.
             // ============================================================
             if (!has_solution) {
 
@@ -4017,10 +4017,10 @@ void ResultJsonToAction(
                 << static_cast<int>(status)
                 << endl;
 
-              // 返回可修改模型的状态
+              // Return the model to a modifiable state
               model.resetModelPreserveSolution(scip);
 
-              // 撤销本轮新增的所有 Q=0 硬固定
+              // Undo all Q=0 hard fixes added in this iteration
               for (int restore_i = 0;
                 restore_i < input_param.num_vars;
                 ++restore_i) {
@@ -4054,7 +4054,7 @@ void ResultJsonToAction(
                 }
               }
 
-              // 当前 iter 第一次无解：自动回退并重算一次
+              // First infeasible solve in the current iter: roll back automatically and retry once
               if (infeasible_retry_count == 0) {
 
                 infeasible_retry_count = 1;
@@ -4066,14 +4066,14 @@ void ResultJsonToAction(
                   << iter
                   << endl;
 
-                // for 循环结束时还会执行 iter++，
-                // 所以这里先减1，使下一轮仍然执行当前iter。
+                // The for loop will still execute iter++ at the end;
+                // decrement it here first so the next loop repeats the current iter.
                 --iter;
                 continue;
               }
 
-              // 跳过硬固定后仍然无解，停止迭代，
-              // 防止继续调用 getSolution() 读取无效解。
+              // If the retry remains infeasible after skipping hard fixes, stop iterating;
+              // this prevents getSolution() from reading an invalid solution.
               cout
                 << "[IRL1] 撤销本轮硬固定后仍然无解，"
                 << "停止后续迭代。"
@@ -4083,7 +4083,7 @@ void ResultJsonToAction(
             }
 
             // ============================================================
-            // 当前求解存在可用解
+            // The current solve has a usable solution
             // ============================================================
             std::cout << "=== SCIP_OKAY ===\n";
 
@@ -4112,12 +4112,12 @@ void ResultJsonToAction(
             // tighter prefix proved infeasible.
             const bool recovered_minimum_prefix = skip_hard_fix_once;
 
-            // 求解成功，恢复正常硬固定逻辑
+            // Solve succeeded; restore normal hard-fixing logic
             skip_hard_fix_once = false;
             infeasible_retry_count = 0;
 
 
-            // 1. 探测当前解的最晚开闸时间
+            // 1. Detect the latest gate-opening time in the current solution
             int current_last_active_j = -1;
             for (int j = input_param.time_vars - 1; j >= 0; --j) {
               bool has_flow = false;
@@ -4144,9 +4144,9 @@ void ResultJsonToAction(
               break;
             }
 
-            // 2. 核心：如果成功找到了最晚时间，下一轮强制把时间线再往前压 1 个时间步
+            // 2. Core step: if the latest time is found, force the horizon one time step earlier in the next iteration
             if (current_last_active_j != -1 && current_last_active_j <= allowed_max_j) {
-              // 每次迭代，强制砍掉 1 个时间步 (也可以砍 2 个，看您想压多快)
+              // Remove one time step per iteration (or two for more aggressive compression)
               allowed_max_j = current_last_active_j - 1;
             }
           }
@@ -4211,7 +4211,7 @@ void ResultJsonToAction(
   void OCIS_scip::set_W(process_T STime, MILP_param& input)
   {
 
-    //按照闸名查找
+    //Search by gate name
     for (auto iter = STime.begin(); iter != STime.end(); iter++) {
       string name = iter->first;
 
@@ -4221,7 +4221,7 @@ void ResultJsonToAction(
         continue;
       }
 
-      //获取最新的一条实测数据
+      //Get the latest measured record
       for (auto sub_iter = stime_value.begin(); sub_iter != stime_value.end(); sub_iter++) {
         g->W_input = sub_iter->second;
         g->fixed_W = 1;
@@ -4237,7 +4237,7 @@ void ResultJsonToAction(
     }
 
     double total_W_demand = 0;
-    //按照管理站名查找
+    //Search by management-station name
     for (int i = 0; i < input_params.topo_dicts.gates.size(); i++) {
       
       Ocis_edges::Point* g = &input_params.topo_dicts.gates[i];
@@ -4299,18 +4299,18 @@ void ResultJsonToAction(
   void OCIS_scip::add_min_Gap_cons(SCIPModel& model,SCIP_VAR* var,SCIP_VAR* var_gap,MILP_param& input_param,
     int gates_nindex,int time_nindex,double target_value,string cons_name) {
     double ht =target_value;
-      // 约束1: y - z <= ht
+      // Constraint 1: y - z <= ht
       model.addLinearConstraint(
         { var, var_gap },
-        { 1.0, -1.0 },  // 系数
+        { 1.0, -1.0 },  // Coefficient
         -SCIPinfinity(model.getSCIP()),
         ht,
         cons_name + "_upper_" + std::to_string(gates_nindex) + "_" + std::to_string(time_nindex)
       );
-      // 约束2: -z - y <= -ht
+      // Constraint 2: -z - y <= -ht
       model.addLinearConstraint(
         { var_gap, var },
-        { -1.0, -1.0 },  // 系数
+        { -1.0, -1.0 },  // Coefficient
         -SCIPinfinity(model.getSCIP()),
         -ht,
         cons_name + "_lower_" + std::to_string(gates_nindex) + "_" + std::to_string(time_nindex)
@@ -4336,19 +4336,19 @@ void ResultJsonToAction(
     int col,
     string cons_name) {
 
-    // 约束1:   dx -|dx|<= 0 
+    // Constraint 1: dx - |dx| <= 0
     model.addLinearConstraint(
       { var, var_fabs },
-      { 1.0, -1.0 },  // 系数
+      { 1.0, -1.0 },  // Coefficient
       -SCIPinfinity(model.getSCIP()),
       0,
       cons_name + "_upper_" + std::to_string(row) + "_" + std::to_string(col)
     );
 
-    // 约束2: -|dx| - dx <= 0
+    // Constraint 2: -|dx| - dx <= 0
     model.addLinearConstraint(
       { var_fabs, var },
-      { -1.0, -1.0 },  // 系数
+      { -1.0, -1.0 },  // Coefficient
       -SCIPinfinity(model.getSCIP()),
       0,
       cons_name + "_lower_" + std::to_string(row) + "_" + std::to_string(col)
@@ -4364,10 +4364,10 @@ void ResultJsonToAction(
     int col,
     string cons_name
   ) {
-    // 约束1:   dx -|dx|<= 0 
+    // Constraint 1: dx - |dx| <= 0
     model.addLinearConstraint(
       { var},
-      { var_coef},  // 系数
+      { var_coef},  // Coefficient
       value,
       value,
       cons_name  + std::to_string(row) + "_" + std::to_string(col)
@@ -4385,10 +4385,10 @@ void ResultJsonToAction(
     int col,
     string cons_name
   ) {
-    // 约束1:   dx -|dx|<= 0 
+    // Constraint 1: dx - |dx| <= 0
     model.addLinearConstraint(
       { var},
-      { var_coef},  // 系数
+      { var_coef},  // Coefficient
       value-epsilon,
       value+epsilon,
       cons_name + "_" + std::to_string(row) + "_" + std::to_string(col)
@@ -4405,10 +4405,10 @@ void ResultJsonToAction(
     int col,
     string cons_name) {
 
-    // 约束1:   dx -|dx|<= 0 
+    // Constraint 1: dx - |dx| <= 0
     model.addLinearConstraint(
       { var},
-      { 1.0 },  // 系数
+      { 1.0 },  // Coefficient
       -SCIPinfinity(model.getSCIP()),
       value,
       cons_name  + std::to_string(row) + "_" + std::to_string(col)
@@ -4430,17 +4430,17 @@ void ResultJsonToAction(
 
       std::vector<string> gates_name_vec_temp;
 
-      // 动态添加每行的所有列
+      // Dynamically add all columns for each row
       for (int j = 0; j < input_param.time_vars ; ++j) {
         std::vector<SCIP_VAR*> row_vars_flow;
         std::vector<double> coeffs_flow;
 
         if (consider_y && j < input_param.time_vars-1) {
           row_vars_flow.push_back(y(i, j));
-          coeffs_flow.push_back(1); // 所有系数为1
+          coeffs_flow.push_back(1); // All coefficients are 1
 
           row_vars_flow.push_back(y(i, j + 1));
-          coeffs_flow.push_back(-1); // 所有系数为1
+          coeffs_flow.push_back(-1); // All coefficients are 1
         }
 
         for (int g = 0; g < input_param.topo_dicts.pools[i].source.size(); ++g) {
@@ -4459,7 +4459,7 @@ void ResultJsonToAction(
             row_vars_flow.push_back(Q(g_id, j));
 
           }
-          coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id] * input_param.dt / input_param.topo_dicts.pools[i].As); // 所有系数为1
+          coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id] * input_param.dt / input_param.topo_dicts.pools[i].As); // All coefficients are 1
           gates_name_vec_temp.push_back(g_tp->name);
           if (input_param.topo_dicts.massMatrix[i][g_id] == 0) {
             std::cout << g_tp->name << " id = " << g_id << " : " << "massMatrix has problem." << std::endl;
@@ -4480,11 +4480,11 @@ void ResultJsonToAction(
           }
 
           if (g_tp->type == 5) {
-            coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id] * input_param.dt / input_param.topo_dicts.pools[i].As); // 所有系数为1
+            coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id] * input_param.dt / input_param.topo_dicts.pools[i].As); // All coefficients are 1
           }
           else
           {
-            coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id] * input_param.dt / (input_param.topo_dicts.pools[i].As*1.)); // 所有系数为1
+            coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id] * input_param.dt / (input_param.topo_dicts.pools[i].As*1.)); // All coefficients are 1
           }
 
           gates_name_vec_temp.push_back(g_tp->name);
@@ -4500,7 +4500,7 @@ void ResultJsonToAction(
           Ocis_edges::Point* g_tp = input_param.topo_dicts.get_gate_byName(name);
           int g_id = g_tp->id;
           row_vars_flow.push_back(Q(g_id, j));
-          coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id]* input_param.dt / input_param.topo_dicts.pools[i].As); // 所有系数为1
+          coeffs_flow.push_back(input_param.topo_dicts.massMatrix[i][g_id]* input_param.dt / input_param.topo_dicts.pools[i].As); // All coefficients are 1
           gates_name_vec_temp.push_back(g_tp->name);
 
           if (input_param.topo_dicts.massMatrix[i][g_id] == 0) {
@@ -4576,10 +4576,10 @@ void ResultJsonToAction(
     int col,
     string cons_name
   ) {
-    // 约束1:   dx -|dx|<= 0 
+    // Constraint 1: dx - |dx| <= 0
     model.addLinearConstraint(
       { var},
-      { var_coef},  // 系数
+      { var_coef},  // Coefficient
       value-epsilon_l,
       value+epsilon_r,
       cons_name + "_" + std::to_string(row) + "_" + std::to_string(col)

@@ -1,19 +1,19 @@
-# 编译与运行
+# Build and run
 
-## 环境要求
+## Requirements
 
-- Windows x64。
-- Visual Studio 2019，安装“使用 C++ 的桌面开发”工作负载。
-- CMake 3.20 或更高版本。
-- 支持 C++20 的 MSVC 工具链。
-- SCIP Optimization Suite 10.0.2 x64 开发包，目录要求见
-  [THIRD_PARTY.md](THIRD_PARTY.md)。
+- Windows x64.
+- Visual Studio 2019 with the **Desktop development with C++** workload.
+- CMake 3.20 or later.
+- An MSVC toolchain with C++20 support.
+- The SCIP Optimization Suite 10.0.2 x64 development package. See
+  [THIRD_PARTY.md](THIRD_PARTY.md).
 
-以下命令均在 `OcisMILPNet_sparsity_standalone` 目录执行。
+Run all commands below from the `OcisMILPNet_sparsity_standalone` directory.
 
-## 准备 SCIP
+## Prepare SCIP
 
-将 SCIP 开发包放到默认位置：
+Place the SCIP development package in the default location:
 
 ```text
 third_party/scip/
@@ -22,18 +22,19 @@ third_party/scip/
 └── bin/*.dll
 ```
 
-也可以放在任意目录，并在 CMake 配置时通过 `SCIP_ROOT` 指定。
+Alternatively, keep SCIP anywhere and pass its location through `SCIP_ROOT`
+during CMake configuration.
 
-## 配置与编译
+## Configure and build
 
-使用工程内默认 SCIP 路径：
+Using the default in-project SCIP location:
 
 ```powershell
 cmake -S . -B build-vs2019 -G "Visual Studio 16 2019" -A x64
 cmake --build build-vs2019 --config Release --parallel 4
 ```
 
-使用外部 SCIP 安装目录：
+Using an external SCIP installation:
 
 ```powershell
 cmake -S . -B build-vs2019 -G "Visual Studio 16 2019" -A x64 `
@@ -41,7 +42,8 @@ cmake -S . -B build-vs2019 -G "Visual Studio 16 2019" -A x64 `
 cmake --build build-vs2019 --config Release --parallel 4
 ```
 
-若系统临时目录空间不足，可先指定工程内临时目录：
+If the system temporary directory is short on space, use a project-local
+temporary directory:
 
 ```powershell
 New-Item -ItemType Directory -Force _tmp | Out-Null
@@ -50,7 +52,7 @@ $env:TMP = $env:TEMP
 cmake --build build-vs2019 --config Release --parallel 4
 ```
 
-主要产物：
+Main build artifacts:
 
 ```text
 build-vs2019/OcisMILPNet_dll/Release/OcisMILPNet.dll
@@ -58,16 +60,18 @@ build-vs2019/OcisMILPNet_bin/Release/OcisMILPNet.exe
 build-vs2019/OcisMILPNet_dlltest/Release/OcisMILPNet_dlltest.exe
 ```
 
-CMake 会把 `SCIP_RUNTIME_DIR` 下的 DLL 复制到各目标的输出目录。若运行时 DLL
-不在 `SCIP_ROOT/bin`，可额外指定：
+CMake copies the DLLs from `SCIP_RUNTIME_DIR` to each target output directory.
+If the runtime DLLs are not under `SCIP_ROOT/bin`, specify their directory
+separately:
 
 ```powershell
 -DSCIP_RUNTIME_DIR="D:/opt/SCIPOptSuite-10.0.2/bin"
 ```
 
-## 准备案例
+## Prepare the case
 
-仓库仅保留案例目录。运行前将 SJ 案例恢复为至少包含以下文件的结构：
+Only the case directory layout is stored in the repository. Before running,
+restore an SJ case containing at least the following files:
 
 ```text
 data/sj/
@@ -82,29 +86,31 @@ data/sj/
 └── output/
 ```
 
-`input.json` 引用的其他文件也必须按其相对路径放入案例目录。
+Any additional files referenced by `input.json` must also be placed at their
+expected relative paths within the case directory.
 
-## 运行
+## Run
 
 ```powershell
 & .\build-vs2019\OcisMILPNet_bin\Release\OcisMILPNet.exe
 ```
 
-成功结束时输出：
+A successful run ends with:
 
 ```text
 Standalone SJ sparsity calculation completed.
 ```
 
-计算结果写入 `data/sj/output`。
+Results are written to `data/sj/output`.
 
-## 测试
+## Test
 
-案例数据完整时执行：
+With complete case data, run:
 
 ```powershell
 ctest --test-dir build-vs2019 -C Release --output-on-failure
 ```
 
-测试包括命令行 SJ 求解和 DLL API 冒烟测试。由于公开仓库暂不包含案例数据，
-未恢复 `data/sj` 内容时这两个运行测试会失败，这是预期行为。
+The test suite contains the command-line SJ solve and the DLL API smoke test.
+Because the public repository does not currently contain case data, both runtime
+tests are expected to fail until the contents of `data/sj` are restored.

@@ -87,13 +87,13 @@ void ocis_init_encoding() {
 }
 nlohmann::json ReadJson(string filename)
 {
-  std::ifstream file(filename); // 创建输入文件流对象
+  std::ifstream file(filename); // Create the input file stream
   if (!isExist(filename)) {
     printf("json::parse can't find %s!\n",filename.c_str());
     return -1;
   }
 
-  //第2个参数是错误处理，第3个参数是不throw exception
+  //The second argument controls error handling; the third disables exceptions
   nlohmann::json j3 =
     nlohmann::json::parse(
       file,
@@ -151,7 +151,7 @@ std::vector<string> readPaths(string filename)
   {
     stringstream sstr(line);
     string field;
-    //下行中的“，”表示文件的   分隔符号
+    //The comma below denotes the file delimiter
     while (getline(sstr, field, '\t'))
     {
       fields.push_back(field);
@@ -202,11 +202,11 @@ string fiterstr(string instr) {
 string filterSpecialChars(const string& instr) {
     string result = instr;
     
-    // 移除所有特殊字符
+    // Remove all special characters
     result.erase(
         remove_if(result.begin(), result.end(), 
                  [](char c) {
-                     // 定义哪些是特殊字符
+                     // Define the special characters
                      string specials = "\"\'\\!@#$%^&*()+=[]{}|;:,<>?`~";
                      return specials.find(c) != string::npos;
                  }),
@@ -287,7 +287,7 @@ h_csv_double create_h_csv_double(int row, int col) {
 //    stringstream sstr(line);
 //    std::vector<string> fields;
 //    string field;
-//    split(line, delimiter, fields);	//csv文件
+//    split(line, delimiter, fields);	//CSV file
 //    if (i >= 0)
 //    {
 //      std::vector<string> row_datas;
@@ -335,8 +335,8 @@ h_csv read_h_csv(string filename, char delimiter)
   h_csv outvecvecstr;
 
   // ========================================================
-  // 判断当前位置合法 UTF-8 字符的字节数
-  // 返回 0 表示不是合法 UTF-8 字符
+  // Determine the byte length of a valid UTF-8 character at the current position
+  // Return 0 if the current position does not start a valid UTF-8 character
   // ========================================================
   auto utf8CharLength =
     [](const string& text, size_t pos) -> size_t
@@ -361,7 +361,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 1;
     }
 
-    // 两字节 UTF-8
+    // Two-byte UTF-8 sequence
     if (c >= 0xC2 && c <= 0xDF)
     {
       if (pos + 1 < text.size() &&
@@ -373,7 +373,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 0;
     }
 
-    // 三字节 UTF-8：E0
+    // Three-byte UTF-8 sequence: E0
     if (c == 0xE0)
     {
       if (pos + 2 < text.size() &&
@@ -387,7 +387,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 0;
     }
 
-    // 三字节 UTF-8：E1-EC、EE-EF
+    // Three-byte UTF-8 sequence: E1-EC, EE-EF
     if ((c >= 0xE1 && c <= 0xEC) ||
       (c >= 0xEE && c <= 0xEF))
     {
@@ -401,7 +401,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 0;
     }
 
-    // 三字节 UTF-8：ED，排除 UTF-16 代理区
+    // Three-byte UTF-8 sequence: ED, excluding the UTF-16 surrogate range
     if (c == 0xED)
     {
       if (pos + 2 < text.size() &&
@@ -415,7 +415,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 0;
     }
 
-    // 四字节 UTF-8：F0
+    // Four-byte UTF-8 sequence: F0
     if (c == 0xF0)
     {
       if (pos + 3 < text.size() &&
@@ -430,7 +430,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 0;
     }
 
-    // 四字节 UTF-8：F1-F3
+    // Four-byte UTF-8 sequence: F1-F3
     if (c >= 0xF1 && c <= 0xF3)
     {
       if (pos + 3 < text.size() &&
@@ -444,7 +444,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 0;
     }
 
-    // 四字节 UTF-8：F4
+    // Four-byte UTF-8 sequence: F4
     if (c == 0xF4)
     {
       if (pos + 3 < text.size() &&
@@ -463,7 +463,7 @@ h_csv read_h_csv(string filename, char delimiter)
   };
 
   // ========================================================
-  // 判断整个字符串是否是合法 UTF-8
+  // Check whether the entire string is valid UTF-8
   // ========================================================
   auto isValidUtf8 =
     [&](const string& text) -> bool
@@ -487,7 +487,7 @@ h_csv read_h_csv(string filename, char delimiter)
   };
 
   // ========================================================
-  // 解码 UTF-8 字符的 Unicode 码点
+  // Decode the Unicode code point of a UTF-8 character
   // ========================================================
   auto decodeUtf8CodePoint =
     [&](const string& text,
@@ -534,7 +534,7 @@ h_csv read_h_csv(string filename, char delimiter)
   };
 
   // ========================================================
-  // 判断 Unicode 码点是否为常用中文
+  // Check whether a Unicode code point is a commonly used Chinese character
   // ========================================================
   auto isChineseCodePoint =
     [](uint32_t codePoint) -> bool
@@ -554,7 +554,7 @@ h_csv read_h_csv(string filename, char delimiter)
   };
 
   // ========================================================
-  // 判断当前位置的 GBK/GB18030 字符长度
+  // Determine the byte length of a GBK/GB18030 character at the current position
   // ========================================================
   auto gb18030CharLength =
     [](const string& text, size_t pos) -> size_t
@@ -583,7 +583,7 @@ h_csv read_h_csv(string filename, char delimiter)
       return 0;
     }
 
-    // GB18030 四字节编码
+    // GB18030 four-byte sequence
     if (pos + 3 < text.size())
     {
       const unsigned char b2 =
@@ -603,7 +603,7 @@ h_csv read_h_csv(string filename, char delimiter)
       }
     }
 
-    // GBK 两字节编码
+    // GBK two-byte sequence
     if (pos + 1 < text.size())
     {
       const unsigned char b2 =
@@ -621,7 +621,7 @@ h_csv read_h_csv(string filename, char delimiter)
   };
 
   // ========================================================
-  // GBK/GB18030 转 UTF-8
+  // Convert GBK/GB18030 to UTF-8
   // ========================================================
   auto gb18030ToUtf8 =
     [](const string& input) -> string
@@ -633,7 +633,7 @@ h_csv read_h_csv(string filename, char delimiter)
 
 #ifdef _WIN32
 
-    // Windows 代码页 54936：GB18030
+    // Windows code page 54936: GB18030
     const UINT codePage = 54936;
 
     const int wideLength =
@@ -775,10 +775,10 @@ h_csv read_h_csv(string filename, char delimiter)
     };
 
   // ========================================================
-  // 混合编码字段转 UTF-8
+  // Convert a mixed-encoding field to UTF-8
   //
-  // 注意：
-  // 只有整个文件不是合法 UTF-8 时，才会调用这里。
+  // Note:
+  // This path is used only when the entire file is not valid UTF-8.
   // ========================================================
   auto normalizeMixedField =
     [&](const string& field) -> string
@@ -799,7 +799,7 @@ h_csv read_h_csv(string filename, char delimiter)
         static_cast<unsigned char>(
           field[pos]);
 
-      // ASCII 在所有编码中相同
+      // ASCII is identical across these encodings
       if (currentByte <= 0x7F)
       {
         output.push_back(field[pos]);
@@ -813,7 +813,7 @@ h_csv read_h_csv(string filename, char delimiter)
       const size_t gbLength =
         gb18030CharLength(field, pos);
 
-      // 只有 UTF-8 合法
+      // Only the UTF-8 interpretation is valid
       if (utf8Length >= 2 &&
         gbLength == 0)
       {
@@ -826,7 +826,7 @@ h_csv read_h_csv(string filename, char delimiter)
         continue;
       }
 
-      // 只有 GBK/GB18030 合法
+      // Only the GBK/GB18030 interpretation is valid
       if (utf8Length == 0 &&
         gbLength >= 2)
       {
@@ -849,7 +849,7 @@ h_csv read_h_csv(string filename, char delimiter)
         continue;
       }
 
-      // UTF-8 和 GBK 都合法，需要消除歧义
+      // Both UTF-8 and GBK interpretations are valid; disambiguation is required
       if (utf8Length >= 2 &&
         gbLength >= 2)
       {
@@ -893,8 +893,8 @@ h_csv read_h_csv(string filename, char delimiter)
             gbCodePoint);
 
         /*
-         * UTF-8 中文一般占 3 个字节。
-         * 三字节或四字节合法 UTF-8 优先保留。
+         * Chinese characters in UTF-8 usually occupy three bytes.
+         * Prefer valid three- or four-byte UTF-8 sequences.
          */
         if (utf8Length >= 3)
         {
@@ -908,19 +908,19 @@ h_csv read_h_csv(string filename, char delimiter)
         }
 
         /*
-         * 解决典型误判：
+         * Handle common misclassifications:
          *
          * D2 BB：
          * UTF-8 -> һ
-         * GBK   -> 一
+         * GBK   -> Chinese character U+4E00
          *
          * D6 A7：
          * UTF-8 -> ֧
-         * GBK   -> 支
+         * GBK   -> Chinese character U+652F
          *
          * D5 A2：
          * UTF-8 -> բ
-         * GBK   -> 闸
+         * GBK   -> Gate
          */
         if (utf8Length == 2 &&
           gbIsChinese &&
@@ -932,7 +932,7 @@ h_csv read_h_csv(string filename, char delimiter)
           continue;
         }
 
-        // 其他情况默认保留 UTF-8
+        // Keep UTF-8 by default in all other cases
         output.append(
           field,
           pos,
@@ -942,7 +942,7 @@ h_csv read_h_csv(string filename, char delimiter)
         continue;
       }
 
-      // 无法识别的字节，写入 UTF-8 替换字符
+      // For an unrecognized byte, write the UTF-8 replacement character
       output += "\xEF\xBF\xBD";
       ++pos;
     }
@@ -951,7 +951,7 @@ h_csv read_h_csv(string filename, char delimiter)
   };
 
   // ========================================================
-  // 打开文件
+  // Open the file
   // ========================================================
 #ifdef _WIN32
 
@@ -981,7 +981,7 @@ h_csv read_h_csv(string filename, char delimiter)
     return outvecvecstr;
   }
 
-  // 一次性读取文件原始字节
+  // Read the raw file bytes in one pass
   string rawData{
       std::istreambuf_iterator<char>(file),
       std::istreambuf_iterator<char>()
@@ -995,7 +995,7 @@ h_csv read_h_csv(string filename, char delimiter)
   }
 
   // ========================================================
-  // 先判断整个文件是否为 UTF-8
+  // First determine whether the entire file is UTF-8
   // ========================================================
   const bool hasUtf8Bom =
     rawData.size() >= 3 &&
@@ -1007,14 +1007,14 @@ h_csv read_h_csv(string filename, char delimiter)
     hasUtf8Bom ||
     isValidUtf8(rawData);
 
-  // 删除 UTF-8 BOM
+  // Remove the UTF-8 BOM
   if (hasUtf8Bom)
   {
     rawData.erase(0, 3);
   }
 
   // ========================================================
-  // 保留原来的按行读取和 split 逻辑
+  // Keep the original line-by-line reading and split logic
   // ========================================================
   std::istringstream inputStream(rawData);
 
@@ -1022,7 +1022,7 @@ h_csv read_h_csv(string filename, char delimiter)
 
   while (std::getline(inputStream, line))
   {
-    // Windows CSV 使用 \r\n，getline 后可能保留 \r
+    // Windows CSV files use \r\n; getline may leave a trailing \r
     if (!line.empty() &&
       line.back() == '\r')
     {
@@ -1031,7 +1031,7 @@ h_csv read_h_csv(string filename, char delimiter)
 
     std::vector<string> fields;
 
-    // 使用你原来的 split 函数
+    // Use the existing split function
     split(line, delimiter, fields);
 
     std::vector<string> row_datas;
@@ -1044,8 +1044,8 @@ h_csv read_h_csv(string filename, char delimiter)
       if (wholeFileIsUtf8)
       {
         /*
-         * 整个文件已经确认是 UTF-8：
-         * 直接保存，禁止再进行 GBK 猜测。
+         * The entire file has been confirmed as UTF-8:
+         * Store it directly; do not perform further GBK guessing.
          */
         row_datas.push_back(
           fields[columnIndex]);
@@ -1053,8 +1053,8 @@ h_csv read_h_csv(string filename, char delimiter)
       else
       {
         /*
-         * 整个文件不是合法 UTF-8：
-         * 才逐字段修复混合编码。
+         * The entire file is not valid UTF-8:
+         * Only then repair mixed encoding field by field.
          */
         row_datas.push_back(
           normalizeMixedField(
@@ -1110,7 +1110,7 @@ h_csv read_h_csv_from_string(const std::string& data, char delimiter) {
   return outvecvecstr;
 }
 
-// 根据分隔符delim，将s中被分隔的字符串逐个保存到elems
+// Split s by delimiter delim and append each token to elems
 void split(const std::string& s, char delim, std::vector<std::string>& elems) {
   std::stringstream ss(s);
   std::string item;
@@ -1119,15 +1119,15 @@ void split(const std::string& s, char delim, std::vector<std::string>& elems) {
   }
 }
 
-//创建文件夹，路径
+//Create directories along the path
 void mkdir_h(string mkpath) {
   string sFullPath = "./测试11/测试22/测试33/测试44/";
   if (mkpath != "") {
     sFullPath = mkpath;
   }
   string sNewFullPath = sFullPath.substr(0, sFullPath.find_last_of("/") + 1);
-  //判断前面的路径是否存在，不存在则创建
-  size_t index = sFullPath.find("/", 0);//得到第一级路径的索引
+  //Check whether each preceding path exists; create it if necessary
+  size_t index = sFullPath.find("/", 0);//Get the index of the first path level
   if (index > sFullPath.length()) return;
   while ((index = sFullPath.find("/", index + 1)) < sFullPath.length())
   {
@@ -1138,7 +1138,7 @@ void mkdir_h(string mkpath) {
     }
   }
 }
-// 根据分隔符delim，将s中被分隔的字符串逐个保存到elems
+// Split s by delimiter delim and append each token to elems
 void split_s(const std::string& s, char delim, std::vector<std::string>& elems) {
   std::stringstream ss(s);
   //cout << s << endl;
@@ -1148,12 +1148,12 @@ void split_s(const std::string& s, char delim, std::vector<std::string>& elems) 
   }
 }
 
-// UTF8字符串转成GBK字符串
+// Convert a UTF-8 string to a GBK string
 std::string U2G(const std::string& utf8)
 {
 #ifdef _WIN32
   int nwLen = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, NULL, 0);
-  wchar_t* pwBuf = new wchar_t[nwLen + 1];//加1用于截断字符串 
+  wchar_t* pwBuf = new wchar_t[nwLen + 1];//Add one byte for the string terminator
   memset(pwBuf, 0, nwLen * 2 + 2);
 
   MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), utf8.length(), pwBuf, nwLen);
@@ -1179,13 +1179,13 @@ std::string U2G(const std::string& utf8)
 #endif
 }
 
-// GBK字符串转成json识别的UTF8字符串
+// Convert a GBK string to UTF-8 for JSON
 std::string G2U(const std::string& gbk)
 {
 #ifdef _WIN32
   int nwLen = ::MultiByteToWideChar(CP_ACP, 0, gbk.c_str(), -1, NULL, 0);
 
-  wchar_t* pwBuf = new wchar_t[nwLen + 1];//加1用于截断字符串 
+  wchar_t* pwBuf = new wchar_t[nwLen + 1];//Add one byte for the string terminator
   ZeroMemory(pwBuf, nwLen * 2 + 2);
 
   ::MultiByteToWideChar(CP_ACP, 0, gbk.c_str(), gbk.length(), pwBuf, nwLen);
@@ -1213,16 +1213,16 @@ std::string G2U(const std::string& gbk)
 
 
 
-// 检查是否是 GBK 编码（简单版，不完全准确）
+// Check whether the string is GBK encoded (simplified and not fully accurate)
 bool isPossibleGBK(const std::string &str) {
     for (size_t i = 0; i < str.size(); ) {
         if ((unsigned char)str[i] <= 0x7F) {
             i++; // ASCII
         } else {
-            if (i + 1 >= str.size()) return false; // 不完整的 GBK
+            if (i + 1 >= str.size()) return false; // Incomplete GBK sequence
             unsigned char c1 = str[i];
             unsigned char c2 = str[i + 1];
-            // GBK 范围：首字节 0x81-0xFE，次字节 0x40-0xFE（非严格）
+            // GBK range: lead byte 0x81-0xFE, trail byte 0x40-0xFE (approximate)
             if (c1 >= 0x81 && c1 <= 0xFE && c2 >= 0x40 && c2 <= 0xFE) {
                 i += 2;
             } else {
@@ -1271,54 +1271,54 @@ bool isPossibleGBK(const std::string &str) {
 
 bool isValidUTF8(const std::string& string) {
   int numBytes = 0;
-  int seqLength = 0; // 记录当前字符的总字节数
-  int codePoint = 0; // 用于计算 2 字节序列的 Unicode 码位
+  int seqLength = 0; // Track the total byte count of the current character
+  int codePoint = 0; // Used to compute the Unicode code point of a two-byte sequence
   
   for (unsigned char c : string) {
     if (numBytes == 0) {
       if ((c & 0x80) == 0) {
-        // ASCII 字符
+        // ASCII character
         continue;
       }
       else if ((c & 0xE0) == 0xC0) {
-        // 2字节序列的第一个字节
+        // First byte of a two-byte sequence
         numBytes = 1;
         seqLength = 2;
-        codePoint = c & 0x1F; // 提取前 5 位
+        codePoint = c & 0x1F; // Extract the low five bits
       }
       else if ((c & 0xF0) == 0xE0) {
-        // 3字节序列的第一个字节 (UTF-8的中文通常在这里)
+        // First byte of a three-byte sequence (typical for Chinese UTF-8 characters)
         numBytes = 2;
         seqLength = 3;
       }
       else if ((c & 0xF8) == 0xF0) {
-        // 4字节序列的第一个字节
+        // First byte of a four-byte sequence
         numBytes = 3;
         seqLength = 4;
       }
       else {
-        return false; // 非法 UTF-8 头部
+        return false; // Invalid UTF-8 leading byte
       }
     }
     else {
-      // 跟随字节必须是 10xxxxxx
+      // Continuation bytes must match 10xxxxxx
       if ((c & 0xC0) != 0x80) {
         return false;
       }
       
-      // 如果是 2 字节序列，我们把码位拼出来
+      // For a two-byte sequence, assemble the code point
       if (seqLength == 2) {
          codePoint = (codePoint << 6) | (c & 0x3F);
       }
       
       numBytes--;
       
-      // 当一个 2 字节字符解析完毕时，进行“防 GBK 撞车”拦截
+      // After parsing a two-byte character, guard against accidental GBK collisions
       if (numBytes == 0 && seqLength == 2) {
-         // U+0080 到 U+03FF 包含常见的拉丁字母扩展和数学符号(如 °C, ±, ×, ÷ 等)
-         // 如果码位 >= 0x0400 (例如俄文西里尔字母、亚美尼亚语等偏门语言)
-         // 在纯中文/英文环境里，这极大概率是 GBK 汉字的“巧合撞车”(比如"闸"会变成 U+0562)
-         // 此时我们果断判定它不是 UTF-8！
+         // U+0080 to U+03FF contains common Latin extensions and mathematical symbols (e.g., °C, ±, ×, ÷)
+         // If the code point is >= 0x0400 (e.g., Cyrillic, Armenian, or other uncommon scripts)
+         // In a Chinese/English-only context, this is very likely an accidental GBK collision (for example, a GBK Chinese character may decode as U+0562)
+         // Treat it as non-UTF-8 in this case.
          if (codePoint >= 0x0400) {
              return false; 
          }
@@ -1390,7 +1390,7 @@ CalculationParams read_Generalization_input_json(string inpath) {
       string start_time_str = FormatTime(input.start_time_t);
       input.T = input_json["CalculationParams"]["T"];
 
-      // 输出 隐式 调度方案的路径
+      // Output path for the implicit scheduling plan
       if (input_json["CalculationParams"].contains("schedule_json_output_path")) {
         input.schedule_json_output_path = input_json["CalculationParams"]["schedule_json_output_path"];
       }
@@ -1430,7 +1430,7 @@ CalculationParams read_Generalization_input_json(const char* input_json_c_str) {
       input.start_time_t = StringToTime_t(start_time);
       input.T = input_json["CalculationParams"]["T"];
 
-      // 输出 隐式 调度方案的路径
+      // Output path for the implicit scheduling plan
       if (input_json["CalculationParams"].contains("schedule_json_output_path")) {
         input.schedule_json_output_path = input_json["CalculationParams"]["schedule_json_output_path"];
       }
@@ -1468,7 +1468,7 @@ CalculationParams read_Generalization_input_json(const char* input_json_c_str) {
 
   //  int max_obs_STime = 0;
   //  int max_obs_STime_gates_vec_id = 0;
-  //  //获取实测流量、调节时间
+  //  //Get measured flow and adjustment time
   //  for (int i = 0; i < input.topo_dicts.gates.size(); i++) {
   //    string g_name = input.topo_dicts.gates[i].name;
   //    if (isValidUTF8(g_name)) {
@@ -1489,7 +1489,7 @@ CalculationParams read_Generalization_input_json(const char* input_json_c_str) {
   //        input.topo_dicts.gates_obs_STime[g_name] = obs_STime;
 
 
-  //        //获取节制闸的最新（最后一次控制的时间）
+  //        //Get the latest regulating-gate record (time of the last control action)
   //        if (obs_STime > max_obs_STime && (g->type == 4 || g->type == 2)) {
   //          max_obs_STime = obs_STime;
   //          max_obs_STime_gates_vec_id = i;
@@ -1531,7 +1531,7 @@ CalculationParams read_Generalization_input_json(const char* input_json_c_str) {
 //  for (int i = 0; i < tm.size(); i++) {
 //    for (int j = 0; j < boundary_flow_csv[i].size(); j++) {
 //
-//      if (i > 0 && j > 0) {                //  避开label和time_str
+//      if (i > 0 && j > 0) {                //  Skip label and time_str
 //        if (tm[i] == "") { continue; }
 //        double data = -1;
 //        if (boundary_flow_csv[i][j] != "" && !containsInvalidChars(boundary_flow_csv[i][j])) {
@@ -1669,12 +1669,12 @@ CalculationParams read_Generalization_input_json(const char* input_json_c_str) {
 //
 
 // ============================================================
-// 清理 CSV 字段
-// 返回值仍然是 UTF-8 编码
+// Clean a CSV field
+// The return value remains UTF-8 encoded
 // ============================================================
 static string trim_csv_field_utf8(string text)
 {
-    // 去除字段开头可能残留的 UTF-8 BOM
+    // Remove any UTF-8 BOM remaining at the start of the field
     if (text.size() >= 3 &&
         static_cast<unsigned char>(text[0]) == 0xEF &&
         static_cast<unsigned char>(text[1]) == 0xBB &&
@@ -1683,7 +1683,7 @@ static string trim_csv_field_utf8(string text)
         text.erase(0, 3);
     }
 
-    // 删除开头的 ASCII 空白字符
+    // Remove leading ASCII whitespace
     size_t begin = 0;
 
     while (begin < text.size() &&
@@ -1693,7 +1693,7 @@ static string trim_csv_field_utf8(string text)
         ++begin;
     }
 
-    // 删除结尾的 ASCII 空白字符
+    // Remove trailing ASCII whitespace
     size_t end = text.size();
 
     while (end > begin &&
@@ -1705,7 +1705,7 @@ static string trim_csv_field_utf8(string text)
 
     text = text.substr(begin, end - begin);
 
-    // 删除字段两侧的双引号
+    // Remove double quotes around the field
     if (text.size() >= 2 &&
         text.front() == '"' &&
         text.back() == '"')
@@ -1718,10 +1718,10 @@ static string trim_csv_field_utf8(string text)
 
 
 // ============================================================
-// 安全解析 double
+// Safely parse a double
 //
-// 解析成功：返回 true
-// 解析失败：返回 false，不抛出异常
+// On success: return true
+// On failure: return false without throwing
 // ============================================================
 static bool try_parse_csv_double(
     const string& input,
@@ -1742,13 +1742,13 @@ static bool try_parse_csv_double(
         text.c_str(),
         &parseEnd);
 
-    // 没有解析到任何数字
+    // No numeric value was parsed
     if (parseEnd == text.c_str())
     {
         return false;
     }
 
-    // 跳过数值后的空格
+    // Skip whitespace after the numeric value
     while (*parseEnd != '\0' &&
            std::isspace(
                static_cast<unsigned char>(*parseEnd)))
@@ -1756,19 +1756,19 @@ static bool try_parse_csv_double(
         ++parseEnd;
     }
 
-    // 数值后面还有其他非法字符
+    // Invalid trailing characters remain after the numeric value
     if (*parseEnd != '\0')
     {
         return false;
     }
 
-    // 数值超出 double 范围
+    // The value is outside the range of double
     if (errno == ERANGE)
     {
         return false;
     }
 
-    // 排除 NaN 和无穷大
+    // Reject NaN and infinity
     if (!std::isfinite(value))
     {
         return false;
@@ -1781,10 +1781,10 @@ static bool try_parse_csv_double(
 
 
 // ============================================================
-// 安全解析时间
+// Safely parse a timestamp
 //
-// StringToTime_t 为你原有的时间转换函数。
-// 时间为空或转换异常时返回 false。
+// StringToTime_t is the existing time-conversion function.
+// Return false if the time is empty or conversion fails.
 // ============================================================
 static bool try_parse_csv_time(
     const string& input,
@@ -1811,15 +1811,15 @@ static bool try_parse_csv_time(
 
 
 // ============================================================
-// 宽表格式 CSV
+// Wide-format CSV
 //
-// CSV 格式示例：
+// CSV format example:
 //
 // time,gate1,gate2,gate3
 // 2025/01/01 00:00:00,1.0,2.0,3.0
 // 2025/01/01 01:00:00,1.1,2.1,3.1
 //
-// 返回：
+// Returns:
 // csv_tm["gate1"][time] = 1.0
 // ============================================================
 process_T read_csv_tm(string path)
@@ -1834,7 +1834,7 @@ process_T read_csv_tm(string path)
     h_csv boundary_flow_csv =
         read_h_csv(path, ',');
 
-    // 至少需要标题行
+    // A header row is required
     if (boundary_flow_csv.empty())
     {
         return csv_tm;
@@ -1843,13 +1843,13 @@ process_T read_csv_tm(string path)
     const std::vector<string>& labels =
         boundary_flow_csv[0];
 
-    // 第一列为时间，至少应有两列
+    // The first column is time, so at least two columns are required
     if (labels.size() <= 1)
     {
         return csv_tm;
     }
 
-    // 从第 1 行开始，第 0 行为标题行
+    // Start from row 1; row 0 is the header
     for (size_t rowIndex = 1;
          rowIndex < boundary_flow_csv.size();
          ++rowIndex)
@@ -1857,7 +1857,7 @@ process_T read_csv_tm(string path)
         const std::vector<string>& row =
             boundary_flow_csv[rowIndex];
 
-        // 当前行至少需要时间列
+        // The current row must contain at least the time column
         if (row.empty())
         {
             continue;
@@ -1878,7 +1878,7 @@ process_T read_csv_tm(string path)
                   timeString,
                   currentTime))
           {
-            // 时间格式错误，跳过整行
+            // Skip the entire row if the time format is invalid
             continue;
           }
         }
@@ -1887,13 +1887,13 @@ process_T read_csv_tm(string path)
           currentTime = stoi(timeString);
         }
 
-        // 防止当前行列数超过标题行，或者少于标题行
+        // Handle rows with more or fewer columns than the header
         const size_t columnCount =
             std::min(
                 row.size(),
                 labels.size());
 
-        // 第 0 列为时间，因此从第 1 列开始读取
+        // Column 0 is time, so start reading from column 1
         for (size_t columnIndex = 1;
              columnIndex < columnCount;
              ++columnIndex)
@@ -1902,7 +1902,7 @@ process_T read_csv_tm(string path)
                 trim_csv_field_utf8(
                     labels[columnIndex]);
 
-            // 标题为空，不写入
+            // Do not write entries with an empty header
             if (label.empty())
             {
                 continue;
@@ -1910,12 +1910,12 @@ process_T read_csv_tm(string path)
 
             double data = -1.0;
 
-            // 解析失败时保持为 -1.0
+            // Keep -1.0 if parsing fails
             try_parse_csv_double(
                 row[columnIndex],
                 data);
 
-            // label 始终为 UTF-8
+            // label is always UTF-8
             csv_tm[label][currentTime] = data;
         }
     }
@@ -1925,13 +1925,13 @@ process_T read_csv_tm(string path)
 
 
 // ============================================================
-// 长表格式 CSV 的内部实现
+// Internal implementation for long-format CSV
 //
-// obj_col：对象名称所在列
-// tm_col：时间所在列
-// value_col：数值所在列
+// obj_col: column containing the object name
+// tm_col: column containing the timestamp
+// value_col: column containing the value
 //
-// CSV 格式示例：
+// CSV format example:
 //
 // name,time,value
 // gate1,2025/01/01 00:00:00,1.0
@@ -1945,7 +1945,7 @@ static process_T read_tidyData_utf8_impl(
 {
     process_T csv_tm;
 
-    // 禁止负数列号
+    // Negative column indices are not allowed
     if (obj_col < 0 ||
         tm_col < 0 ||
         value_col < 0)
@@ -1978,7 +1978,7 @@ static process_T read_tidyData_utf8_impl(
     requiredColumn =
         std::max(requiredColumn, valueColumn);
 
-    // 从第 1 行读取，第 0 行视为标题行
+    // Start from row 1; row 0 is treated as the header
     for (size_t rowIndex = 1;
          rowIndex < boundary_flow_csv.size();
          ++rowIndex)
@@ -1986,13 +1986,13 @@ static process_T read_tidyData_utf8_impl(
         const std::vector<string>& row =
             boundary_flow_csv[rowIndex];
 
-        // 当前行列数不足
+        // The current row has too few columns
         if (row.size() <= requiredColumn)
         {
             continue;
         }
 
-        // read_h_csv 已经将内容统一为 UTF-8
+        // read_h_csv has already normalized the content to UTF-8
         string name =
             trim_csv_field_utf8(
                 row[objColumn]);
@@ -2013,18 +2013,18 @@ static process_T read_tidyData_utf8_impl(
                 timeString,
                 currentTime))
         {
-            // 时间无效，跳过当前行
+            // Skip the current row if the time is invalid
             continue;
         }
 
         double value = -1.0;
 
-        // 空值或非法数值保持为 -1.0
+        // Keep -1.0 for empty or invalid values
         try_parse_csv_double(
             row[valueColumn],
             value);
 
-        // name 保持 UTF-8，不再进行 U2G 转换
+        // Keep name in UTF-8; do not apply U2G conversion
         csv_tm[name][currentTime] = value;
     }
 
@@ -2033,7 +2033,7 @@ static process_T read_tidyData_utf8_impl(
 
 
 // ============================================================
-// 长表格式：对象列固定为 0，时间列固定为 1
+// Long format: object column is fixed at 0 and time column at 1
 // ============================================================
 process_T read_tidyData(
     string path,
@@ -2048,7 +2048,7 @@ process_T read_tidyData(
 
 
 // ============================================================
-// 长表格式：由调用方指定对象列、时间列和数值列
+// Long format: the caller specifies the object, time, and value columns
 // ============================================================
 process_T read_tidyData(
     string path,
@@ -2232,30 +2232,30 @@ double intkey_LinearInterpolate(const std::map<int, double>& myMap, int key) {
     return -1;
   }
 
-  // 如果 map 为空或者 key 小于 map 中的最小键，则无法插值
+  // Interpolation is unavailable if the map is empty or key is below the minimum key
   if (myMap.empty() ) {
 
 
     return -1;
   }
 
-  // 查找第一个大于或等于 key 的迭代器
+  // Find the first iterator whose key is greater than or equal to key
   auto upper = myMap.lower_bound(key);
 
-  // 如果这个迭代器是 map 的开始，则只能返回第一个值
+  // If this iterator is at map.begin(), return the first value
   if (upper == myMap.begin()) {
     return upper->second;
   }
 
-  // 如果这个迭代器是 map 的结束，则只能返回最后一个值
+  // If this iterator is at map.end(), return the last value
   if (upper == myMap.end()) {
     return std::prev(upper)->second;
   }
 
-  // 找到 key 之前的键值对
+  // Find the key-value pair preceding key
   auto lower = std::prev(upper);
 
-  // 进行线性插值
+  // Perform linear interpolation
   double k1 = lower->first;
   double v1 = lower->second;
   double k2 = upper->first;
@@ -2283,7 +2283,7 @@ double GateScheduleLinearInterpolate(const std::map<time_t, double>& myMap, time
     return -1;
   }
 
-  // 如果 map 为空或者 key 小于 map 中的最小键，则无法插值
+  // Interpolation is unavailable if the map is empty or key is below the minimum key
   if (myMap.empty() || key < myMap.begin()->first) {
 
     string myMap_time_str = FormatTime(myMap.begin()->first);
@@ -2292,23 +2292,23 @@ double GateScheduleLinearInterpolate(const std::map<time_t, double>& myMap, time
     return -1;
   }
 
-  // 查找第一个大于或等于 key 的迭代器
+  // Find the first iterator whose key is greater than or equal to key
   auto upper = myMap.lower_bound(key);
 
-  // 如果这个迭代器是 map 的开始，则只能返回第一个值
+  // If this iterator is at map.begin(), return the first value
   if (upper == myMap.begin()) {
     return upper->second;
   }
 
-  // 如果这个迭代器是 map 的结束，则只能返回最后一个值
+  // If this iterator is at map.end(), return the last value
   if (upper == myMap.end()) {
     return std::prev(upper)->second;
   }
 
-  // 找到 key 之前的键值对
+  // Find the key-value pair preceding key
   auto lower = std::prev(upper);
 
-  // 进行线性插值
+  // Perform linear interpolation
   double k1 = lower->first;
   double v1 = lower->second;
   double k2 = upper->first;
@@ -2333,7 +2333,7 @@ double GateScheduleLinearInterpolate(const std::map<time_t, double>& myMap, time
     return -1;
   }
 
-  // 如果 map 为空或者 key 小于 map 中的最小键，则无法插值
+  // Interpolation is unavailable if the map is empty or key is below the minimum key
   if (myMap.empty() || key+interval < myMap.begin()->first) {
 
     //string myMap_time_str = FormatTime(myMap.begin()->first);
@@ -2342,27 +2342,27 @@ double GateScheduleLinearInterpolate(const std::map<time_t, double>& myMap, time
     return -1;
   }
 
-  // 查找第一个大于或等于 key 的迭代器
+  // Find the first iterator whose key is greater than or equal to key
   auto upper = myMap.lower_bound(key);
 
   if (upper == myMap.end()&&fabs(std::prev(upper)->first - key) > interval) {
     return -1;
   }
 
-  // 如果这个迭代器是 map 的开始，则只能返回第一个值
+  // If this iterator is at map.begin(), return the first value
   if (upper == myMap.begin()) {
     return upper->second;
   }
 
-  // 如果这个迭代器是 map 的结束，则只能返回最后一个值
+  // If this iterator is at map.end(), return the last value
   if (upper == myMap.end()) {
     return -1;// std::prev(upper)->second;
   }
 
-  // 找到 key 之前的键值对
+  // Find the key-value pair preceding key
   auto lower = std::prev(upper);
 
-  // 进行线性插值
+  // Perform linear interpolation
   double k1 = lower->first;
   double v1 = lower->second;
   double k2 = upper->first;
@@ -2389,30 +2389,30 @@ bool containsInvalidChars(const std::string& str) {
     bool hasDecimal = false;
     
     for (char c : str) {
-        // 检查字母
+        // Check for letters
         if (c=='?') {
             return true;
         }
 
 
         if (isalpha(static_cast<unsigned char>(c))) {
-          // 正确处理字母
+          // Handle letters correctly
             return true;
         }
         
-        // 检查小数点
+        // Check the decimal point
         if (c == '.') {
-            if (hasDecimal) {  // 已经有一个小数点了
+            if (hasDecimal) {  // A decimal point has already been encountered
                 return true;
             }
             hasDecimal = true;
             
-            // 检查小数点位置是否合法（不能在开头或结尾）
+            // Validate the decimal-point position (not at the beginning or end)
             if (&c == &str.front() || &c == &str.back()) {
                 return true;
             }
         }
-        // 可以添加其他非法字符检查
+        // Additional invalid-character checks can be added here
         else if(!isdigit(static_cast<unsigned char>(c)) && c != '+' && c != '-') {
           return true;
         }
@@ -2480,7 +2480,7 @@ void  delete_space(string& s) {
     int row_num = sim_data->begin()->second.size() ;
     int col_num = sim_data->size() + 1;
 
-  //生成时间戳
+  //Generate timestamps
     std::vector<string> time_str_vec;
     for (auto iter = sim_data->begin()->second.begin(); iter !=  sim_data->begin()->second.end(); iter++)
     {
@@ -2508,7 +2508,7 @@ void  delete_space(string& s) {
       }
       i++;
     }
-    data.emplace(data.begin(), names);  // 在开头插入元素 1
+    data.emplace(data.begin(), names);  // Insert element 1 at the beginning
     write_h_csv(output_path + file_suffix, data, ',');
 
   }
@@ -2534,7 +2534,7 @@ void  delete_space(string& s) {
     int row_num = sim_data->begin()->second.size() ;
     int col_num = sim_data->size() + 1;
 
-  //生成时间戳
+  //Generate timestamps
     std::vector<string> time_str_vec;
     for (auto iter = sim_data->begin()->second.begin(); iter !=  sim_data->begin()->second.end(); iter++)
     {
@@ -2573,7 +2573,7 @@ void  delete_space(string& s) {
       i++;
     }
   //cout << "emplace done" << endl;
-    data.emplace(data.begin(), names);  // 在开头插入元素 1
+    data.emplace(data.begin(), names);  // Insert element 1 at the beginning
     write_h_csv(output_path + file_suffix, data, ',');
 
   }
@@ -2636,9 +2636,9 @@ int str_compare(const char* s1, const char* s2) {
 double getValue(const std::map<std::string, double>& check_structure_flow, const std::string& key) {
     auto it = check_structure_flow.find(key);
     if (it != check_structure_flow.end()) {
-        return it->second; // 键存在，返回对应的值
+        return it->second; // Key exists; return its value
     }
-    return -1.0; // 键不存在，返回 -1
+    return -1.0; // Key does not exist; return -1
 }
 
 double get_average_of_vector(std::vector<double> vec) {
@@ -2653,20 +2653,20 @@ double get_average_of_vector(std::vector<double> vec) {
 
 
 bool isInvalidChar(char c) {
-    // 控制字符（除了制表符、换行等常见空白字符）
+    // Control characters except common whitespace such as tabs and newlines
     if (std::iscntrl(c) && c != '\t' && c != '\n' && c != '\r') {
         return true;
     }
     
-    // 非打印字符（除了空格）
+    // Non-printable characters except spaces
     if (!std::isprint(c) && !std::isspace(c)) {
         return true;
     }
     
-    // 扩展ASCII范围外的字符（如果使用ASCII）
+    // Characters outside extended ASCII (when ASCII is expected)
     if (static_cast<unsigned char>(c) > 127) {
-        // 根据需求决定是否视为无效
-        return true; // 或者 false，取决于需求
+        // Decide whether to treat this as invalid as required
+        return true; // or false, depending on requirements
     }
     
     return false;
@@ -2702,7 +2702,7 @@ bool isValidString(const std::string& str, const std::string& pattern) {
 char* json2char(json input_j) {
 
   std::string j_str = input_j.dump();
-  // 动态分配内存
+  // Allocate memory dynamically
   char* result = new char[j_str.length() + 1];
   std::strcpy(result, j_str.c_str());
 
@@ -2744,7 +2744,7 @@ std::vector<std::string> getCsvFilesWithoutObs(const std::string& directory_path
                 std::string filename = entry.path().filename().string();
                 std::string absolute_path = fs::absolute(entry.path()).string();
                 
-                // 检查是否是CSV文件且不包含"obs"
+                // Check that this is a CSV file whose name does not contain "obs"
                 if (filename.find(".csv") != std::string::npos && 
                     filename.find(mask) == std::string::npos) {
                     csv_files.push_back(absolute_path);
@@ -2770,7 +2770,7 @@ void printMatrixInfo(const std::vector<std::vector<double>>& matrix) {
     
     std::cout << "Matrix size: " << nrows << " x " << ncols << std::endl;
     
-    // 统计非零元素
+    // Count nonzero elements
     size_t nonzeros = 0;
     for (const auto& row : matrix) {
         for (double val : row) {
@@ -2782,7 +2782,7 @@ void printMatrixInfo(const std::vector<std::vector<double>>& matrix) {
     std::cout << "Non-zero elements: " << nonzeros 
               << " (sparsity: " << sparsity << "%)" << std::endl;
     
-    // 打印前几行
+    // Print the first few rows
     int printRows = std::min(5, (int)nrows);
     int printCols = std::min(10, (int)ncols);
     
@@ -2797,10 +2797,10 @@ void printMatrixInfo(const std::vector<std::vector<double>>& matrix) {
 }
 
       /**
-     * 计算矩阵的相干系数（列向量间最大相关性）
-     * 矩阵格式：外层vector是行，内层vector是该行的列值
-     * @param matrix 二维vector表示的矩阵
-     * @return 相干系数（0到1之间的值，1表示完全相关）
+     * Compute matrix coherence (maximum correlation between column vectors)
+     * Matrix format: the outer vector stores rows and each inner vector stores column values for that row
+     * @param matrix matrix represented by a 2D vector
+     * @return coherence coefficient (0 to 1, where 1 means perfectly correlated)
      */
 void MutualCoherence(const std::vector<std::vector<double>>& matrix1) {
 
@@ -2809,7 +2809,7 @@ void MutualCoherence(const std::vector<std::vector<double>>& matrix1) {
     int rows = matrix1.size();
     int cols = matrix1[0].size();
     
-    // 简化的相干系数计算
+    // Simplified coherence calculation
     auto coherence = [&](const std::vector<std::vector<double>>& mat) {
         double maxC = 0.0;
         for (int i = 0; i < cols; ++i) {
@@ -2835,15 +2835,15 @@ void MutualCoherence(const std::vector<std::vector<double>>& matrix1) {
     std::mt19937 gen(std::random_device{}());
     std::uniform_real_distribution<> scaleDist(0.7, 1.3);
     
-    // 重点：列缩放优化
+    // Key step: column-scaling optimization
     for (int col = 0; col < cols; ++col) {
-        // 对该列尝试不同的缩放因子
+        // Try different scaling factors for this column
         double originalScale = 1.0;
         
         for (double scale : {0.3, 0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 2.0}) {
             std::vector<std::vector<double>> test = best;
             
-            // 缩放这一列
+            // Scale this column
             for (int i = 0; i < rows; ++i) {
                 test[i][col] = best[i][col] * scale;
             }
@@ -2873,10 +2873,10 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
     std::cout << "矩阵维度: " << d << " × " << n << std::endl;
     std::cout << "总列对数: C(" << n << ",2) = " << n*(n-1)/2 << std::endl;
     
-    // 精确统计
-    int perfectlyColinear = 0;      // 相干系数 = 1.0
-    int highlyCorrelated = 0;       // 相干系数 > 0.99
-    int moderatelyCorrelated = 0;   // 相干系数 > 0.9
+    // Detailed statistics
+    int perfectlyColinear = 0;      // coherence = 1.0
+    int highlyCorrelated = 0;       // coherence > 0.99
+    int moderatelyCorrelated = 0;   // coherence > 0.9
     
     std::vector<std::tuple<double, int, int>> perfectPairs;
     std::vector<std::tuple<double, int, int>> highPairs;
@@ -2894,7 +2894,7 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
             if (norm1 > 1e-12 && norm2 > 1e-12) {
                 double coh = std::fabs(dot) / (std::sqrt(norm1) * std::sqrt(norm2));
                 
-                if (coh > 0.9999) {  // 几乎完全共线
+                if (coh > 0.9999) {  // Nearly perfectly collinear
                     perfectlyColinear++;
                     perfectPairs.emplace_back(coh, i, j);
                 } else if (coh > 0.99) {
@@ -2912,14 +2912,14 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
     std::cout << "高度相关 (coh>0.99): " << highlyCorrelated << " 对" << std::endl;
     std::cout << "中度相关 (coh>0.9): " << moderatelyCorrelated << " 对" << std::endl;
     
-    // 显示完全共线的列对
+    // Display perfectly collinear column pairs
     if (!perfectPairs.empty()) {
         std::cout << "\n❌ 发现完全共线的列对（致命问题）:" << std::endl;
         for (int i = 0; i < std::min(10, (int)perfectPairs.size()); ++i) {
             auto [coh, col1, col2] = perfectPairs[i];
             std::cout << "   列(" << col1 << ", " << col2 << "): 相干系数 = " << coh << std::endl;
             
-            // 显示这两列的值（前几个元素）
+            // Display the first few values of these two columns
             std::cout << "     列" << col1 << ": [";
             for (int k = 0; k < std::min(3, d); ++k) std::cout << A[k][col1] << " ";
             std::cout << "...]" << std::endl;
@@ -2928,7 +2928,7 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
             for (int k = 0; k < std::min(3, d); ++k) std::cout << A[k][col2] << " ";
             std::cout << "...]" << std::endl;
             
-            // 检查是否是倍数关系
+            // Check whether the columns are scalar multiples
             if (d > 0) {
                 double ratio = (A[0][col2] != 0) ? A[0][col1] / A[0][col2] : 0;
                 bool constantRatio = true;
@@ -2948,10 +2948,10 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
         }
     }
     
-    // 分析问题根源
+    // Analyze the root cause
     std::cout << "\n🔍 问题根源分析:" << std::endl;
     
-    // 检查是否是下三角矩阵
+    // Check whether the matrix is lower triangular
     bool isTriangular = true;
     for (int i = 0; i < d; ++i) {
         for (int j = i + 1; j < n; ++j) {
@@ -2967,24 +2967,24 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
         std::cout << "1. 矩阵是下三角的" << std::endl;
         std::cout << "   前" << d << "列线性无关，但后面的列可能是前面列的线性组合" << std::endl;
         
-        // 检查后面列是否是前面列的线性组合
+        // Check whether later columns are linear combinations of earlier columns
         std::cout << "\n   第" << d << "列之后的列分析:" << std::endl;
-        for (int j = d; j < std::min(d+5, n); ++j) {  // 检查几列
+        for (int j = d; j < std::min(d+5, n); ++j) {  // Check several columns
             std::cout << "   列" << j << ": ";
             
-            // 检查是否能被前d列线性表示
+            // Check whether the column can be represented linearly by the first d columns
             bool canBeExpressed = true;
             for (int i = 0; i < d; ++i) {
                 if (i < j) {
-                    // 下三角：第j列在第i行之后才有值
-                    // 实际上，对于下三角矩阵，第j列的前j个元素可能非零
+                    // Lower triangular: column j has values only after row i
+                    // For a lower-triangular matrix, the first j entries of column j may actually be nonzero
                 }
             }
             std::cout << "可能相关" << std::endl;
         }
     }
     
-    // 检查是否有全零列
+    // Check for all-zero columns
     int zeroColumns = 0;
     for (int j = 0; j < n; ++j) {
         bool allZero = true;
@@ -3002,7 +3002,7 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
         std::cout << "   这些列与任何其他列的点积都为0" << std::endl;
     }
     
-    // 检查是否有相同的列
+    // Check for identical columns
     std::cout << "\n3. 检查是否有完全相同的列:" << std::endl;
     int identicalPairs = 0;
     for (int i = 0; i < n; ++i) {
@@ -3025,7 +3025,7 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
         std::cout << "   没有发现完全相同的列" << std::endl;
     }
     
-    // Donoho-Tanner理论的影响
+    // Effect of Donoho-Tanner theory
     std::cout << "\n📚 Donoho-Tanner理论视角:" << std::endl;
     std::cout << "相干系数 = 1 意味着这些列在多胞形 P 中是同一个方向" << std::endl;
     std::cout << "这破坏了向外邻接性的基本条件" << std::endl;
@@ -3035,7 +3035,7 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
     std::cout << "2. LP失效: 线性规划无法恢复正确的支撑集" << std::endl;
     std::cout << "3. 最多只能保证恢复 k=1 的稀疏解" << std::endl;
     
-    // 修复建议
+    // Repair recommendations
     std::cout << "\n💡 修复建议:" << std::endl;
     std::cout << "1. 立即处理完全共线的列对:" << std::endl;
     std::cout << "   - 删除其中一个列（如果物理允许）" << std::endl;
@@ -3052,7 +3052,7 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
     std::cout << "   处理完全共线列后，相干系数应降至 < 0.99" << std::endl;
     std::cout << "   然后才能进行进一步的优化" << std::endl;
     
-    // 总结
+    // Summary
     std::cout << "\n🎯 总结:" << std::endl;
     std::cout << "你的矩阵不是'性质差'，而是有结构性错误" << std::endl;
     std::cout << "有 " << perfectlyColinear << " 对完全共线的列" << std::endl;
@@ -3060,7 +3060,7 @@ void diagnoseMatrixProblems(const std::vector<std::vector<double>>& A) {
     std::cout << "必须首先修复这些完全共线的列，否则LP无法工作" << std::endl;
 }
 
-// 修复函数
+// Repair function
 std::vector<std::vector<double>> fixColinearColumns(
     const std::vector<std::vector<double>>& A,
     double epsilon) {
@@ -3073,7 +3073,7 @@ std::vector<std::vector<double>> fixColinearColumns(
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dist(-epsilon, epsilon);
     
-    // 找出需要修复的列
+    // Identify columns that require repair
     std::vector<bool> needsFix(n, false);
     
     for (int i = 0; i < n; ++i) {
@@ -3089,14 +3089,14 @@ std::vector<std::vector<double>> fixColinearColumns(
             if (norm1 > 1e-12 && norm2 > 1e-12) {
                 double coh = std::fabs(dot) / (std::sqrt(norm1) * std::sqrt(norm2));
                 if (coh > 0.9999) {
-                    // 标记第j列需要修复（总是修复第二个）
+                    // Mark column j for repair (always repair the second one)
                     needsFix[j] = true;
                 }
             }
         }
     }
     
-    // 修复标记的列
+    // Repair the marked columns
     int fixedCount = 0;
     for (int j = 0; j < n; ++j) {
         if (needsFix[j]) {
@@ -3111,13 +3111,13 @@ std::vector<std::vector<double>> fixColinearColumns(
     return fixed;
 }
 
-// 测试函数：判断矩阵A是否能通过LP恢复稀疏解
+// Test whether matrix A can recover a sparse solution via LP
 void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
 
-      // 1. 诊断问题
+      // 1. Diagnose the problem
     diagnoseMatrixProblems(A);
     
-    // 2. 修复完全共线的列
+    // 2. Repair perfectly collinear columns
     auto fixedMatrix = fixColinearColumns(A, 1e-5);
 
 
@@ -3126,10 +3126,10 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
         return;
     }
     
-    int d = A.size();      // 测量数
-    int n = A[0].size();   // 变量数
+    int d = A.size();      // Number of measurements
+    int n = A[0].size();   // Number of variables
     
-    // 验证矩阵维度
+    // Validate matrix dimensions
     for (int i = 0; i < d; ++i) {
         if (A[i].size() != n) {
             std::cout << "错误：矩阵行大小不一致" << std::endl;
@@ -3141,7 +3141,7 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
     std::cout << "矩阵维度: " << d << " × " << n << std::endl;
     std::cout << "欠定比例: δ = " << d << "/" << n << " = " << (double)d/n << std::endl;
     
-    // ========== 1. 计算相干系数 ==========
+    // ========== 1. Compute coherence ==========
     std::cout << "\n1. 相干系数分析:" << std::endl;
     
     double maxCoherence = 0.0;
@@ -3172,7 +3172,7 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
     
     std::cout << "   最大相干系数: " << maxCoherence << std::endl;
     
-    // 计算相干系数分布
+    // Compute the coherence distribution
     std::sort(coherencePairs.begin(), coherencePairs.end(), 
               [](const auto& a, const auto& b) { return std::get<0>(a) > std::get<0>(b); });
     
@@ -3184,10 +3184,10 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
         }
     }
     
-    // ========== 2. 多胞形几何分析 ==========
+    // ========== 2. Polytope geometry analysis ==========
     std::cout << "\n2. 多胞形几何分析:" << std::endl;
     
-    // 检查列向量是否处于一般位置
+    // Check whether column vectors are in general position
     int problematicPairs = 0;
     for (const auto& [coh, i, j] : coherencePairs) {
         if (coh > 0.999) problematicPairs++;
@@ -3199,10 +3199,10 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
         std::cout << "   警告: " << problematicPairs << " 个列对几乎共线" << std::endl;
     }
     
-    // ========== 3. 估计向外邻接度 ==========
+    // ========== 3. Estimate outward neighborliness ==========
     std::cout << "\n3. 向外邻接度估计:" << std::endl;
     
-    // 根据Donoho-Tanner的相变表（插值）
+    // Use interpolation from the Donoho-Tanner phase-transition table
     double delta = (double)d / n;
     double rho_N = 0.0, rho_VS = 0.0;
     
@@ -3226,16 +3226,16 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
         rho_N = 0.267; rho_VS = 0.903;
     }
     
-    int k_strong = std::max(1, (int)(rho_N * d));  // 强恢复：保证所有解
-    int k_weak = std::max(1, (int)(rho_VS * d));   // 弱恢复：保证大多数解
+    int k_strong = std::max(1, (int)(rho_N * d));  // Strong recovery: guarantees all solutions
+    int k_weak = std::max(1, (int)(rho_VS * d));   // Weak recovery: guarantees most solutions
     
     std::cout << "   强恢复保证: k ≤ " << k_strong << std::endl;
     std::cout << "   弱恢复保证: k ≤ " << k_weak << " (大多数情况)" << std::endl;
     
-    // ========== 4. 矩阵结构分析 ==========
+    // ========== 4. Matrix-structure analysis ==========
     std::cout << "\n4. 矩阵结构分析:" << std::endl;
     
-    // 检查矩阵的稀疏性
+    // Check matrix sparsity
     int zeroCount = 0;
     for (int i = 0; i < d; ++i) {
         for (int j = 0; j < n; ++j) {
@@ -3245,7 +3245,7 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
     double sparsity = (double)zeroCount / (d * n);
     std::cout << "   稀疏度: " << sparsity * 100 << "% 为零元素" << std::endl;
     
-    // 检查是否有特殊结构（下三角、对角占优等）
+    // Check for special structure (lower triangular, diagonally dominant, etc.)
     bool isLowerTriangular = true;
     bool isDiagonalDominant = true;
     
@@ -3272,32 +3272,32 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
         std::cout << "   影响: 前" << std::min(d, n) << "列线性无关，但后续列可能相关" << std::endl;
     }
     
-    // ========== 5. 数值实验验证 ==========
+    // ========== 5. Numerical validation ==========
     std::cout << "\n5. 数值实验验证（模拟）:" << std::endl;
     
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> valDist(0.5, 2.0);
     
-    // 测试不同稀疏度的理论成功率
+    // Test theoretical success rates at different sparsity levels
     for (int k = 1; k <= std::min(6, d+2); ++k) {
         double expectedSuccessRate = 0.0;
         
         if (k <= k_strong) {
-            expectedSuccessRate = 1.0;  // 理论保证
+            expectedSuccessRate = 1.0;  // Theoretical guarantee
         } else if (k <= k_weak) {
-            // 在强弱之间，成功率逐渐下降
+            // Between the strong and weak thresholds, the success rate gradually decreases
             double position = (double)(k - k_strong) / (k_weak - k_strong);
-            expectedSuccessRate = 1.0 - position * 0.5;  // 从100%降到50%
+            expectedSuccessRate = 1.0 - position * 0.5;  // From 100% to 50%
         } else {
-            // 超过弱恢复阈值，成功率快速下降
+            // Beyond the weak-recovery threshold, the success rate drops rapidly
             double excess = (double)(k - k_weak) / k_weak;
             expectedSuccessRate = std::max(0.0, 0.5 - excess);
         }
         
-        // 考虑相干系数的影响
+        // Account for the effect of coherence
         if (maxCoherence > 0.9) {
-            expectedSuccessRate *= 0.7;  // 高相干系数降低成功率
+            expectedSuccessRate *= 0.7;  // High coherence reduces the success rate
         } else if (maxCoherence > 0.7) {
             expectedSuccessRate *= 0.9;
         }
@@ -3306,20 +3306,20 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
                   << expectedSuccessRate * 100 << "%" << std::endl;
     }
     
-    // ========== 6. 综合评估与建议 ==========
+    // ========== 6. Overall assessment and recommendations ==========
     std::cout << "\n6. 综合评估:" << std::endl;
     
-    // 计算一个综合评分
+    // Compute an overall score
     double score = 0.0;
     
-    // 1. 欠定比例得分 (δ越大越好)
-    score += delta * 30;  // 最多30分
+    // 1. Underdetermined-ratio score (larger δ is better)
+    score += delta * 30;  // Up to 30 points
     
-    // 2. 向外邻接度得分
-    score += (double)k_weak / d * 40;  // 最多40分
+    // 2. Outward-neighborliness score
+    score += (double)k_weak / d * 40;  // Up to 40 points
     
-    // 3. 相干系数得分 (越低越好)
-    score += (1.0 - maxCoherence) * 30;  // 最多30分
+    // 3. Coherence score (lower is better)
+    score += (1.0 - maxCoherence) * 30;  // Up to 30 points
     
     std::cout << "   恢复能力综合评分: " << score << "/100" << std::endl;
     
@@ -3337,7 +3337,7 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
         std::cout << "   建议考虑其他方法或修改矩阵设计" << std::endl;
     }
     
-    // ========== 7. 具体建议 ==========
+    // ========== 7. Specific recommendations ==========
     std::cout << "\n7. 具体建议:" << std::endl;
     
     if (maxCoherence > 0.9) {
@@ -3363,7 +3363,7 @@ void testSparseRecoveryFeasibility(const std::vector<std::vector<double>>& A) {
 
 
 
-// 提取所有整数
+// Extract all integers
 std::vector<int> extract_integers_regex(const std::string& str) {
     std::vector<int> numbers;
     std::regex pattern(R"([-+]?\d+)");
@@ -3416,7 +3416,7 @@ std::map<string, std::map<string, std::map<string, double >>> get_sluice_Eopen(j
 process_T get_sluice_AverageEopen(json data_j) {
   process_T data_map;
   for (auto& j : data_j.items()) {
-    //闸
+    //Gate
     string name = j.key();
     if (isValidUTF8(name)) {
       name = U2G(name);
@@ -3425,7 +3425,7 @@ process_T get_sluice_AverageEopen(json data_j) {
     if (j.value().contains("ON")) {
       for (auto& j_sub : j.value()["ON"].items()) {
         int Eopen_num = j.value()["ON"].size();
-        //孔
+        //Opening
         string name_sub = j_sub.key();
         for (auto& j_sub_sub : j_sub.value().items()) {
           //Time Series
@@ -3444,18 +3444,18 @@ process_T get_sluice_AverageEopen(json data_j) {
 }
 
 
-// 查找当前目录下文件名包含"tar"的文件
+// Find files in the current directory whose names contain "tar"
 std::vector<fs::path> findFilesWithTarInName(const fs::path& directory,string& tar_str) {
     std::vector<fs::path> result;
     
     try {
-        // 只遍历当前目录，不递归子目录
+        // Traverse only the current directory; do not recurse into subdirectories
         for (const auto& entry : fs::directory_iterator(directory)) {
-            // 只处理常规文件，跳过目录
+            // Process regular files only; skip directories
             if (entry.is_regular_file()) {
                 std::string filename = entry.path().filename().string();
                 
-                // 检查文件名是否包含"tar"
+                // Check whether the filename contains "tar"
                 if (filename.find(tar_str) != std::string::npos) {
                     result.push_back(entry.path());
                 }
@@ -3469,21 +3469,21 @@ std::vector<fs::path> findFilesWithTarInName(const fs::path& directory,string& t
 }
 
 
-// 最简单直接的过滤函数
+// Simple direct filtering function
 std::string filterFilename(const std::string& filename, 
                           const std::string& filterStr,
                           bool caseSensitive ) {
     std::string result = filename;
     
     if (caseSensitive) {
-        // 区分大小写
+        // Case-sensitive
         size_t pos = result.find(filterStr);
         while (pos != std::string::npos) {
             result.erase(pos, filterStr.length());
             pos = result.find(filterStr, pos);
         }
     } else {
-        // 不区分大小写
+        // Case-insensitive
         std::string lowerResult = result;
         std::transform(lowerResult.begin(), lowerResult.end(),
                       lowerResult.begin(), ::tolower);
@@ -3509,7 +3509,7 @@ process_T get_solution(std::map<string, process_str_vec> solution, string var_na
 
 	process_T data_map;
 
-    // 如果结果里没有此变量则直接返回
+    // Return immediately if the result does not contain this variable
     if (solution.find(var_name) == solution.end()) {
         return data_map;
     }
@@ -3571,7 +3571,7 @@ void ConvertBoundaryFlowTime(
     time_t start_time_t,
     double T,double DT)
 {
-    const time_t interval = 24 * 3600;  // 每24小时
+    const time_t interval = 24 * 3600;  // Every 24 hours
     const time_t end_time =
         start_time_t + static_cast<time_t>(T * 3600);
 
@@ -3634,7 +3634,7 @@ bool WaterUnitMapper::Init(
     code_to_unit_.clear();
     unit_to_target_.clear();
 
-    // 读取 config
+    // Read config
     {
         std::ifstream file(config_file);
 
@@ -3665,7 +3665,7 @@ bool WaterUnitMapper::Init(
         }
     }
 
-    // 读取配水单元清单
+    // Read the water-allocation unit list
     {
         std::ifstream file(water_unit_file);
 
