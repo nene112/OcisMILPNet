@@ -28,3 +28,14 @@ preparation of reproducibility scripts for the numerical experiments.
 The code will be uploaded after these checks are completed to ensure that the released version is understandable, executable, and reproducible.
 
 Please watch this repository for updates.
+
+## Source release
+
+The first organized source release is available in
+[`OcisMILPNet_sparsity_standalone`](OcisMILPNet_sparsity_standalone/README.md).
+It contains the standalone sparsity MILP solver, command-line and DLL targets,
+build instructions, and third-party dependency documentation.
+
+The case directory layout is included, but case data are intentionally not part
+of this release. See the standalone build guide for the files required to run
+the SJ case after obtaining the data separately.

@@ -1,0 +1,24 @@
+/build*
+/_tmp/
+
+# Case data is intentionally not published yet. Keep only the directory layout.
+/data/**
+!/data/sj/
+!/data/sj/fig/
+!/data/sj/input/
+!/data/sj/mesh/
+!/data/sj/output/
+!/data/sj/fig/.gitkeep
+!/data/sj/input/.gitkeep
+!/data/sj/mesh/.gitkeep
+!/data/sj/output/.gitkeep
+
+# Obtain SCIP separately; only its expected directory layout is versioned.
+/third_party/scip/**
+!/third_party/scip/README.md
+!/third_party/scip/bin/
+!/third_party/scip/include/
+!/third_party/scip/lib/
+!/third_party/scip/bin/.gitkeep
+!/third_party/scip/include/.gitkeep
+!/third_party/scip/lib/.gitkeep
