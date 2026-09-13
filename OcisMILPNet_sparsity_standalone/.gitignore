@@ -1,4 +1,4 @@
-/build*
+/build*/
 /_tmp/
 
 # Case data is intentionally not published yet. Keep only the directory layout.
